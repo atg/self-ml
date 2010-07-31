@@ -169,7 +169,7 @@ const char* parseHead(const char* sourceString, size_t length, SFNodeRef node, s
 
 		if (isspace(c) || c == ']' || c == '}')
 		{
-			break;
+			continue;
 		}
 		else if (c == '{')
 		{
@@ -416,14 +416,21 @@ void parseList(const char* sourceString, size_t length, SFNodeRef parentNode, si
 	//Create the node
 	SFNodeRef node = SFNodeCreate();
 	
+	//Head
+	const char* head = parseHead(sourceString, length, parentNode, offset);
+	
+	//If no head can be found, do a parse anyway to sort up any loose ends, but don't use the result
+	if (head == NULL || strlen(head) == 0)
+	{
+		parseNodes(sourceString, length, node, offset);
+		return;
+	}
+	
+	SFNodeSetHead(node, head);
+	
 	//Add to its parent
 	SFNodeSetParent(node, parentNode);
 	SFNodeAddChild(parentNode, node);
-	
-	//Head
-	const char* head = parseHead(sourceString, length, parentNode, offset);
-	//(*offset)++;
-	SFNodeSetHead(node, head);
 	
 	//Children
 	parseNodes(sourceString, length, node, offset);
