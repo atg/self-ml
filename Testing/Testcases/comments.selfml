@@ -1,0 +1,7 @@
+# This is a line comment at the start of the document
+
+{# This is a block comment with {# a nested block comment#}#}
+
+{#{##}#}
+
+# This is a line comment at the end of the document
