@@ -50,7 +50,7 @@ static void parseList(const char* sourceString, size_t length, SFNodeRef parentN
 SFNodeRef SFNodeCreate()
 {
 	//Allocate a new node
-	SFNodeRef node = (SFNodeRef)calloc(1, sizeof(SFNodeRef));
+	SFNodeRef node = (SFNodeRef)calloc(1, sizeof(SFNode));
 	
 	//If allocation failed, return selfml_null
 	if (node == NULL)
@@ -101,8 +101,9 @@ void parseRoot(const char* sourceString, SFNodeRef rootNode)
 	parseNodes(sourceString, strlen(sourceString), rootNode, &offset);
 }
 void parseNodes(const char* sourceString, size_t length, SFNodeRef node, size_t *offset)
-{	
-	for(; *offset < length; (*offset)++) {
+{
+	for(; *offset < length; (*offset)++)
+	{		
 		char c = sourceString[*offset];
 
 		if (isspace(c) || c == ']' || c == '}')
@@ -126,7 +127,6 @@ void parseNodes(const char* sourceString, size_t length, SFNodeRef node, size_t 
 				parseCurlyBracketBlock(sourceString, length, node, offset);
 			}
 		}
-		
 		else if (c == '#')
 		{
 			parseLineComment(sourceString, length, node, offset);
@@ -159,6 +159,64 @@ void parseNodes(const char* sourceString, size_t length, SFNodeRef node, size_t 
 	(*offset)--;
 }
 
+
+const char* parseHead(const char* sourceString, size_t length, SFNodeRef node, size_t *offset)
+{
+	const char *str = NULL;
+	for(; *offset < length; (*offset)++)
+	{
+		char c = sourceString[*offset];
+
+		if (isspace(c) || c == ']' || c == '}')
+		{
+			break;
+		}
+		else if (c == '{')
+		{
+			char next_c = '\0';
+			if (*offset + 1 < length)
+				next_c = sourceString[*offset];
+		
+			if (next_c == '#')
+			{
+				parseBlockComment(sourceString, length, node, offset);
+			}
+			else
+			{
+				// { ... } is an error!
+				// Parse and ignore
+				parseCurlyBracketBlock(sourceString, length, node, offset);
+			}
+		}
+		else if (c == '#')
+		{
+			parseLineComment(sourceString, length, node, offset);
+		}
+		else if (c == '[')
+		{
+			str = parseBracketString(sourceString, length, node, offset);
+			
+			(*offset)++;
+			return str;
+		}
+		else if (c == '`')
+		{
+			str = parseBacktickString(sourceString, length, node, offset);
+			
+			(*offset)++;
+			return str;
+		}
+		else
+		{
+			str = parseVerbatimString(sourceString, length, node, offset);
+			
+			(*offset)++;
+			return str;
+		}
+	}
+	
+	return NULL;
+}
 
 // blockComment := '{#' (blockComment | any)+ '#}'
 void parseBlockComment(const char* sourceString, size_t length, SFNodeRef node, size_t *offset)
@@ -230,31 +288,29 @@ const char* parseVerbatimString(const char* sourceString, size_t length, SFNodeR
 {
 	if (*offset >= length)
 		return NULL;
-	
-	int nestingLevel = 0;
-		
+			
 	//Pass 1: Find out the length of the string
 	size_t i = 0;
 	size_t literalLength = 0;
 	for(; *offset + i < length; i++) {
-		char c = sourceString[i];
+		char c = sourceString[*offset + i];
 		
-		if (c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}')
+		if (c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}' || isspace(c))
 			break;
 		
 		literalLength++;
 	}
 	
 	//Allocate `literalLength` of memory
-	char *buffer = (char *)malloc(literalLength);
+	char *buffer = (char *)calloc(1, literalLength + 1);
 	
 	//Pass 2: Set the characters in `buffer`
-	for((*offset)++, i = 0; *offset < length && i < literalLength; (*offset)++, i++) {
+	for(i = 0; *offset < length && i < literalLength; (*offset)++, i++) {
 		buffer[i] = sourceString[*offset];
 	}
 	
 	(*offset)--;
-	
+		
 	return buffer;
 }
 
@@ -264,34 +320,36 @@ const char* parseBracketString(const char* sourceString, size_t length, SFNodeRe
 	if (*offset >= length)
 		return NULL;
 	
-	int nestingLevel = 0;
+	int nestingLevel = 1;
 		
 	//Pass 1: Find out the length of the string
-	size_t i = 0;
+	size_t i = 1;
 	size_t literalLength = 0;
 	for(; *offset + i < length; i++) {
-		char c = sourceString[i];
+		char c = sourceString[*offset + i];
 		
 		if (c == '[')
 			nestingLevel++;
 		else if (c == ']')
+		{
 			nestingLevel--;
 			
-		if (nestingLevel == -1)
-			break;
-		
+			if (nestingLevel == 0)
+				break;
+		}
+				
 		literalLength++;
 	}
 	
 	//Allocate `literalLength` of memory
-	char *buffer = (char *)malloc(literalLength);
+	char *buffer = (char *)calloc(1, literalLength + 1);
 	
 	//Pass 2: Set the characters in `buffer`
 	for((*offset)++, i = 0; *offset < length && i < literalLength; (*offset)++, i++) {
 		buffer[i] = sourceString[*offset];
 	}
 	
-	(*offset)--;
+	//(*offset)--;
 	
 	return buffer;
 }
@@ -301,39 +359,49 @@ const char* parseBacktickString(const char* sourceString, size_t length, SFNodeR
 {
 	if (*offset >= length)
 		return NULL;
-	
-	int nestingLevel = 0;
-		
+			
 	//Pass 1: Find out the length of the string
-	size_t i = 0;
+	size_t i = 1;
 	size_t literalLength = 0;
 	for(; *offset + i < length; i++) {
-		char c = sourceString[i];
-		char next_c = '\0';
-		if (i + 1 < length)
-			next_c = sourceString[*offset];
+		char c = sourceString[*offset + i];
 		
-		if (c == '`')
+		char next_c = '\0';
+		if (*offset + i + 1 < length)
+			next_c = sourceString[*offset + i + 1];
+		
+		if (c == '`' && next_c != '`')
 		{
-			if (next_c == '`')
-				i++;
-			else
-				i++;
+			break;
 		}
 		
 		literalLength++;
+		
+		if (c == '`' && next_c == '`')
+		{
+			i++;
+		}
 	}
 	
 	//Allocate `literalLength` of memory
-	char *buffer = (char *)malloc(literalLength);
+	char *buffer = (char *)calloc(1, literalLength + 1);
 	
 	//Pass 2: Set the characters in `buffer`
 	for((*offset)++, i = 0; *offset < length && i < literalLength; (*offset)++, i++) {
-		buffer[i] = sourceString[*offset];
+		char c = sourceString[*offset];
+
+		char next_c = '\0';
+		if (*offset + 1 < length)
+			next_c = sourceString[*offset + 1];
+		
+		if (c == '`' && next_c == '`')
+		{
+			(*offset)++;
+		}
+		
+		buffer[i] = c;
 	}
-	
-	(*offset)--;
-	
+		
 	return buffer;
 }
 
@@ -353,7 +421,8 @@ void parseList(const char* sourceString, size_t length, SFNodeRef parentNode, si
 	SFNodeAddChild(parentNode, node);
 	
 	//Head
-	const char* head = parseVerbatimString(sourceString, length, parentNode, offset);
+	const char* head = parseHead(sourceString, length, parentNode, offset);
+	//(*offset)++;
 	SFNodeSetHead(node, head);
 	
 	//Children
@@ -398,6 +467,8 @@ void SFNodeSetFirstChild(SFNodeRef parent, SFNodeRef child)
 
 SFNodeRef SFNodeNextInList(SFNodeRef node)
 {
+	SFNode *n = SFNodeForRef(node);
+	
 	return SFNodeForRef(node)->next;
 }
 //Beware! This function simply sets the next pointer, it doesn't attempt to do any splicing
@@ -431,6 +502,7 @@ void SFNodeAddString(SFNodeRef parent, const char* str)
 }
 void SFNodeAddChild(SFNodeRef parent, SFNodeRef node)
 {
+	
 	//If the parent isn't a list, then it can't have any children. Ignore the request to add a child.
 	if (SFNodeGetType(parent) != SFNodeTypeList)
 		return;
@@ -443,19 +515,25 @@ void SFNodeAddChild(SFNodeRef parent, SFNodeRef node)
 	
 	//If the parent has no first child, then set it to the new node
 	if (firstChild == SFNullNode)
+	{
 		SFNodeSetFirstChild(parent, node);
+		return;
+	}
 	
 	//Otherwise find its last child
 	SFNodeRef currentNode = firstChild;
 	while (currentNode != SFNullNode)
 	{
 		if (currentNode == node)
-			return;
+			break;
 		
 		if (SFNodeNextInList(currentNode) == SFNullNode)
 		{
 			SFNodeSetNextInList(currentNode, node);
-		}
+            break;
+        }
+        
+        currentNode = SFNodeNextInList(currentNode);
 	}
 }
 
@@ -507,3 +585,28 @@ _Bool SFNodeRepresentation(SFNodeRef node, const char* stringDestination)
 	return false;
 }
 
+
+void SFNodePrintRepresentation(SFNodeRef node)
+{
+    if (SFNodeGetType(node) == SFNodeTypeList)
+    {
+        printf(" (");
+        
+        if (SFNodeHead(node) != NULL)
+            printf("%s", SFNodeHead(node));
+        
+        SFNodeRef r = SFNodeFirstChild(node);
+        while (r != SFNullNode)
+        {
+            SFNodePrintRepresentation(r);
+            r = SFNodeNextInList(r);
+        }
+        
+        printf(")");
+    }
+    else if (SFNodeGetType(node) == SFNodeTypeString)
+    {        
+        if (SFNodeStringValue(node) != NULL)
+            printf(" `%s`", SFNodeStringValue(node));
+    }
+}

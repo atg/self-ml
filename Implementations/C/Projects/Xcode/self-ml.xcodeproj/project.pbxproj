@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		750D27B31204404600F75287 /* self-ml.c in Sources */ = {isa = PBXBuildFile; fileRef = 750D27B21204404600F75287 /* self-ml.c */; };
-		8DD76FAC0486AB0100D96B5E /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.c */; settings = {ATTRIBUTES = (); }; };
+		7517C3B11204BA4F007F4327 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 7517C3B01204BA4F007F4327 /* main.c */; };
+		75B365811204B71B0089D4C9 /* self-ml.c in Sources */ = {isa = PBXBuildFile; fileRef = 75B3657F1204B71B0089D4C9 /* self-ml.c */; };
+		75B365891204B75B0089D4C9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 75B365881204B75B0089D4C9 /* Foundation.framework */; };
 		8DD76FB00486AB0100D96B5E /* self-ml.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6A0FF2C0290799A04C91782 /* self-ml.1 */; };
 /* End PBXBuildFile section */
 
@@ -26,9 +27,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		08FB7796FE84155DC02AAC07 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
-		750D27B11204404600F75287 /* self-ml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "self-ml.h"; sourceTree = "<group>"; };
-		750D27B21204404600F75287 /* self-ml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "self-ml.c"; sourceTree = "<group>"; };
+		7517C3B01204BA4F007F4327 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		75B3657F1204B71B0089D4C9 /* self-ml.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "self-ml.c"; path = "../../Source/self-ml.c"; sourceTree = SOURCE_ROOT; };
+		75B365801204B71B0089D4C9 /* self-ml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "self-ml.h"; path = "../../Source/self-ml.h"; sourceTree = SOURCE_ROOT; };
+		75B365881204B75B0089D4C9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		8DD76FB20486AB0100D96B5E /* self-ml */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "self-ml"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6A0FF2C0290799A04C91782 /* self-ml.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = "self-ml.1"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -38,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				75B365891204B75B0089D4C9 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -50,6 +53,7 @@
 				08FB7795FE84155DC02AAC07 /* Source */,
 				C6A0FF2B0290797F04C91782 /* Documentation */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
+				75B365881204B75B0089D4C9 /* Foundation.framework */,
 			);
 			name = "self-ml";
 			sourceTree = "<group>";
@@ -57,9 +61,9 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				08FB7796FE84155DC02AAC07 /* main.c */,
-				750D27B11204404600F75287 /* self-ml.h */,
-				750D27B21204404600F75287 /* self-ml.c */,
+				7517C3B01204BA4F007F4327 /* main.c */,
+				75B3657F1204B71B0089D4C9 /* self-ml.c */,
+				75B365801204B71B0089D4C9 /* self-ml.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -109,6 +113,9 @@
 			buildConfigurationList = 1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "self-ml" */;
 			compatibilityVersion = "Xcode 3.1";
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* self-ml */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -123,8 +130,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DD76FAC0486AB0100D96B5E /* main.c in Sources */,
-				750D27B31204404600F75287 /* self-ml.c in Sources */,
+				75B365811204B71B0089D4C9 /* self-ml.c in Sources */,
+				7517C3B11204BA4F007F4327 /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

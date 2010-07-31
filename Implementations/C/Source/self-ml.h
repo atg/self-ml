@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdio.h>
 
 
 struct SFNode_;
@@ -78,3 +80,5 @@ void SFNodeAddChild(SFNodeRef parent, SFNodeRef node);
 
 size_t SFNodeRepresentationLength(SFNodeRef node);
 _Bool SFNodeRepresentation(SFNodeRef node, const char* stringDestination);
+
+void SFNodePrintRepresentation(SFNodeRef node);
