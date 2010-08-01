@@ -43,6 +43,8 @@ SFNodeRef SFNodeCreate();
 //`sourceString` is assumed to be encoded with an encoding equivalent to ASCII up to 7-bits. eg ASCII, UTF-8, Latin-1, etc.
 SFNodeRef SFNodeCreateFromString(const char* sourceString);
 
+SFNodeRef SFNodeCreateFromFile(FILE *file);
+
 //Frees a node and all subnodes, incuding strings
 void SFNodeFree(SFNodeRef node);
 
@@ -78,7 +80,5 @@ void SFNodeAddChild(SFNodeRef parent, SFNodeRef node);
 
 #pragma mark Representations
 
-//size_t SFNodeRepresentationLength(SFNodeRef node);
-//_Bool SFNodeRepresentation(SFNodeRef node, const char* stringDestination);
-
+void SFNodeWriteRepresentationToFile(SFNodeRef node, FILE* file);
 void SFNodePrintRepresentation(SFNodeRef node);

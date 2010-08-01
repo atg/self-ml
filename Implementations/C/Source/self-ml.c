@@ -48,9 +48,9 @@ static const char* parseBracketString(const char* sourceString, size_t length, S
 static const char* parseBacktickString(const char* sourceString, size_t length, SFNodeRef node, size_t *offset);
 static void parseList(const char* sourceString, size_t length, SFNodeRef parentNode, size_t *offset);
 
-static void SFNodePrintRepresentationInner(SFNodeRef node, int indentation);
-static void SFNodePrintRepresentationOfList(SFNodeRef node, int indentation);
-static void SFNodePrintRepresentationOfString(SFNodeRef node);
+static void SFNodeWriteRepresentationToFileInner(SFNodeRef node, int indentation, FILE* file);
+static void SFNodeWriteRepresentationOfListToFile(SFNodeRef node, int indentation, FILE* file);
+static void SFNodeWriteRepresentationOfStringToFile(SFNodeRef node, FILE* file);
 
 
 
@@ -78,6 +78,55 @@ SFNodeRef SFNodeCreateFromString(const char* sourceString)
 		return SFNullNode;
 	
 	parseRoot(sourceString, node);
+	
+	return node;
+}
+
+SFNodeRef SFNodeCreateFromFile(FILE *file)
+{
+	char *str = NULL;
+	
+	size_t capacity = 32;
+	size_t count = 0;
+	str = (char *)malloc(capacity);
+	if (!str)
+	{
+		printf("No memory\n");
+		return 0;
+	}
+	
+	while (1)
+	{
+		if (count + 1 >= capacity)
+		{
+			capacity *= 2;
+			str = realloc(str, capacity);
+			if (!str)
+			{
+				printf("No memory\n");
+				return 0;
+			}
+		}
+		
+		char c = fgetc(file);
+		if (c == '\0' || c == EOF)
+		{
+			str[count] = '\0';
+			break;
+		}
+		else
+		{
+			str[count] = c;
+		}
+		
+		count++;
+	}
+	
+	fclose(file);
+	
+	SFNodeRef node = SFNodeCreateFromString(str);
+	
+	free(str);
 	
 	return node;
 }
@@ -527,7 +576,7 @@ void SFNodeSetFirstChild(SFNodeRef parent, SFNodeRef child)
 SFNodeRef SFNodeNextInList(SFNodeRef node)
 {
 	if (node == SFNullNode)
-		return;
+		return SFNullNode;
 	
 	return SFNodeForRef(node)->next;
 }
@@ -641,7 +690,7 @@ void SFNodeSetStringValue(SFNodeRef node, const char *str)
 _Bool SFNodeCopyStringValueTo(SFNodeRef node, const char* stringDestination)
 {
 	if (node == SFNullNode)
-		return;
+		return SFNullNode;
 	
 	if (SFNodeStringValueLength(node) == 0)
 		return false;
@@ -667,12 +716,18 @@ _Bool SFNodeRepresentation(SFNodeRef node, const char* stringDestination)
 
 void SFNodePrintRepresentation(SFNodeRef node)
 {
+	SFNodeWriteRepresentationToFile(node, stdout);
+	
+	printf("\n");
+}
+void SFNodeWriteRepresentationToFile(SFNodeRef node, FILE* file)
+{
 	if (node == SFNullNode)
 		return;
 	
-	SFNodePrintRepresentationInner(node, 0);
+	SFNodeWriteRepresentationToFileInner(node, 0, file);
 }
-void SFNodePrintRepresentationInner(SFNodeRef node, int indentation)
+void SFNodeWriteRepresentationToFileInner(SFNodeRef node, int indentation, FILE* file)
 {
 	if (node == SFNullNode)
 		return;
@@ -680,20 +735,20 @@ void SFNodePrintRepresentationInner(SFNodeRef node, int indentation)
 	int i;
 	for (i = 0; i < indentation; i++)
 	{
-		printf("    ");
+		fprintf(file, "    ");
 	}
 	
     if (SFNodeGetType(node) == SFNodeTypeList)
     {
-		SFNodePrintRepresentationOfList(node, indentation);
+		SFNodeWriteRepresentationOfListToFile(node, indentation, file);
     }
     else if (SFNodeGetType(node) == SFNodeTypeString)
     {  
-		SFNodePrintRepresentationOfString(node);
+		SFNodeWriteRepresentationOfStringToFile(node, file);
     }
 }
 
-void SFNodePrintRepresentationOfList(SFNodeRef node, int indentation)
+void SFNodeWriteRepresentationOfListToFile(SFNodeRef node, int indentation, FILE* file)
 {
 	if (node == SFNullNode)
 		return;
@@ -702,7 +757,7 @@ void SFNodePrintRepresentationOfList(SFNodeRef node, int indentation)
 	_Bool isRoot = head == NULL;
 	
 	if (!isRoot)
-		printf("(%s", SFNodeHead(node));
+		fprintf(file, "(%s", SFNodeHead(node));
 	
 	SFNodeRef r = SFNodeFirstChild(node);
 	_Bool isScalarOnly = true;
@@ -728,19 +783,19 @@ void SFNodePrintRepresentationOfList(SFNodeRef node, int indentation)
 		if (isRoot)
 		{
 			if (!isFirstChild)
-				printf("\n\n");
+				fprintf(file, "\n\n");
 			
-			SFNodePrintRepresentationInner(r, 0);
+			SFNodeWriteRepresentationToFileInner(r, 0, file);
 		}
 		else if (isScalarOnly)
 		{
-			printf(" ");
-			SFNodePrintRepresentationInner(r, 0);
+			fprintf(file, " ");
+			SFNodeWriteRepresentationToFileInner(r, 0, file);
 		}
 		else
 		{
-			printf("\n");
-			SFNodePrintRepresentationInner(r, indentation + 1);
+			fprintf(file, "\n");
+			SFNodeWriteRepresentationToFileInner(r, indentation + 1, file);
 		}
 		
 		r = SFNodeNextInList(r);
@@ -748,9 +803,9 @@ void SFNodePrintRepresentationOfList(SFNodeRef node, int indentation)
 	}
 	
 	if (!isRoot)
-		printf(")");
+		fprintf(file, ")");
 }
-void SFNodePrintRepresentationOfString(SFNodeRef node)
+void SFNodeWriteRepresentationOfStringToFile(SFNodeRef node, FILE* file)
 {
 	if (node == SFNullNode)
 		return;
@@ -797,22 +852,22 @@ void SFNodePrintRepresentationOfString(SFNodeRef node)
 	
 	if (isVerbatimString)
 	{
-		printf("%s", strval);
+		fprintf(file, "%s", strval);
 	}
 	else if (isBracketedString && bracketedStringNestingLevel == 0)
 	{
-		printf("[%s]", strval);
+		fprintf(file, "[%s]", strval);
 	}
 	else
 	{
-		printf("`");
+		fprintf(file, "`");
 		for (; *strval != '\0'; strval++)
 		{
 			if (*strval == '`')
-				printf("`");
+				fprintf(file, "`");
 			
-			printf("%c", *strval);
+			fprintf(file, "%c", *strval);
 		}
-		printf("`");
+		fprintf(file, "`");
 	}
 }

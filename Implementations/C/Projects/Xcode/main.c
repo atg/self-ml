@@ -25,19 +25,19 @@ int main (int argc, const char * argv[]) {
 	
 	*/
 	
-	char *str = NULL;
-	FILE* input = NULL;
+	SFNodeRef node;
+	
 	if (argc == 3 && strcmp(argv[1], "-c") == 0)
 	{
-		str = (char *)argv[2];
+		node = SFNodeCreateFromString((char *)argv[2]);
 	}
 	else if (argc == 2)
 	{
-		input = fopen(argv[1], "r");
+		node = SFNodeCreateFromFile(fopen(argv[1], "r"));
 	}
 	else if (argc <= 1)
 	{
-		input = stdin;
+		node = SFNodeCreateFromFile(stdin);
 	}
 	else
 	{
@@ -45,51 +45,7 @@ int main (int argc, const char * argv[]) {
 		return 0;
 	}
 	
-	
-	if (!str)
-	{
-		size_t capacity = 32;
-		size_t count = 0;
-		str = (char *)malloc(capacity);
-		if (!str)
-		{
-			printf("No memory\n");
-			return 0;
-		}
-		
-		while (1)
-		{
-			if (count + 1 >= capacity)
-			{
-				capacity *= 2;
-				str = realloc(str, capacity);
-				if (!str)
-				{
-					printf("No memory\n");
-					return 0;
-				}
-			}
-			
-			char c = fgetc(input);
-			if (c == '\0' || c == EOF)
-			{
-				str[count] = '\0';
-				break;
-			}
-			else
-			{
-				str[count] = c;
-			}
-			
-			count++;
-		}
-		
-		fclose(input);
-	}
-	
-	SFNodeRef node = SFNodeCreateFromString(str);
 	SFNodePrintRepresentation(node);
-	printf("\n");
 	    
     return 0;
 }
