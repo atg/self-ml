@@ -1,10 +1,15 @@
 /*
- *  self-ml.c
+ *  self-ml.h
  *  self-ml
- *
- *  Created by Alex Gordon on 31/07/2010.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
+ *  
+ *	Created by Alex Gordon.
+ *  For more information, see http://dequechair.com/self-ml
+ *  
+ *  I, the copyright holder of this work, hereby release it into the public domain. This applies worldwide.
+ *  In case this is not legally possible,
+ *  I grant any entity the right to use this work for any purpose, without any conditions, unless such conditions are required by law.
+ *  
+ *  If you have an questions about the above declaration, please email anythingfileability.net
  */
 
 #include "self-ml.h"
@@ -42,6 +47,10 @@ static const char* parseVerbatimString(const char* sourceString, size_t length, 
 static const char* parseBracketString(const char* sourceString, size_t length, SFNodeRef node, size_t *offset);
 static const char* parseBacktickString(const char* sourceString, size_t length, SFNodeRef node, size_t *offset);
 static void parseList(const char* sourceString, size_t length, SFNodeRef parentNode, size_t *offset);
+
+static void SFNodePrintRepresentationInner(SFNodeRef node, int indentation);
+static void SFNodePrintRepresentationOfList(SFNodeRef node, int indentation);
+static void SFNodePrintRepresentationOfString(SFNodeRef node);
 
 
 
@@ -95,21 +104,37 @@ void SFNodeFree(SFNodeRef nodeRef)
 
 #pragma mark Parsing
 
+// root := nodes
 void parseRoot(const char* sourceString, SFNodeRef rootNode)
 {
+	//`offset` is a cursor for sourceString while we're parsing
+	//Functions take a pointer to it, then increment or decrement it
+	//It can be a little tricky to figure out what's happening, but there's a general rule of thumb:
+	//  Functions *take* `offset` on the character they want to parse (so a line comment takes `offset` pointing to the '#')
+	//  Functions *leave* `offset` on the last character they parsed (so a line comment leaves `offset` pointing to the 'LF')
 	size_t offset = 0;
+	
+	//Parse a list of nodes
 	parseNodes(sourceString, strlen(sourceString), rootNode, &offset);
 }
+
+// nodes := <node>*
 void parseNodes(const char* sourceString, size_t length, SFNodeRef node, size_t *offset)
 {
+	// Loop continuously unless we run out of characters to parse
+	// We will exit early
 	for(; *offset < length; (*offset)++)
-	{		
+	{
+		// Check `c` to see what kind of thing we'll be parsing
 		char c = sourceString[*offset];
-
+		
+		// whitespace is ignoreed
+		// ] and } are ERRORS, but we current have no way to report errors so we just ignore them
 		if (isspace(c) || c == ']' || c == '}')
 		{
 			continue;
 		}
+		// an opening { is an ERROR unless it is immediately followed by a #, in which case it's a block comment
 		else if (c == '{')
 		{
 			char next_c = '\0';
@@ -123,32 +148,40 @@ void parseNodes(const char* sourceString, size_t length, SFNodeRef node, size_t 
 			else
 			{
 				// { ... } is an error!
-				// Parse and ignore
+				// consume and ignore
 				parseCurlyBracketBlock(sourceString, length, node, offset);
 			}
 		}
+		// # denotes an line comment
 		else if (c == '#')
 		{
 			parseLineComment(sourceString, length, node, offset);
 		}
+		// [ denotes a string literal
 		else if (c == '[')
 		{
 			const char *str = parseBracketString(sourceString, length, node, offset);
 			SFNodeAddString(node, str);
 		}
+		// ` denotes a string literal
 		else if (c == '`')
 		{
 			const char *str = parseBacktickString(sourceString, length, node, offset);
 			SFNodeAddString(node, str);
 		}
+		// ( denotes a subnode
 		else if (c == '(')
 		{
+			// parse a new subnode until it returns control to us
 			parseList(sourceString, length, node, offset);
 		}
+		// ) denotes the end of this node
 		else if (c == ')')
 		{
+			// return control to the parent
 			return;
 		}
+		// any other characters start a verbatim string
 		else
 		{
 			const char *str = parseVerbatimString(sourceString, length, node, offset);
@@ -156,10 +189,11 @@ void parseNodes(const char* sourceString, size_t length, SFNodeRef node, size_t 
 		}
 	}
 	
+	//The rule is to leave on the last character we parsed
 	(*offset)--;
 }
 
-
+// head := BACKTICK_STRING | BRACKETED_STRING | VERBATIM_STRING
 const char* parseHead(const char* sourceString, size_t length, SFNodeRef node, size_t *offset)
 {
 	const char *str = NULL;
@@ -447,51 +481,76 @@ SFNode* SFNodeForRef(SFNodeRef ref)
 
 SFNodeType SFNodeGetType(SFNodeRef node)
 {
+	if (node == SFNullNode)
+		return SFNodeTypeList;
+	
 	return SFNodeForRef(node)->nodeType;
 }
 void SFNodeSetType(SFNodeRef node, SFNodeType newType)
 {
+	if (node == SFNullNode)
+		return;
+	
 	SFNodeForRef(node)->nodeType = newType;
 }
 
 SFNodeRef SFNodeParent(SFNodeRef node)
 {
+	if (node == SFNullNode)
+		return SFNullNode;
+	
 	return SFNodeForRef(node)->parent;
 }
 void SFNodeSetParent(SFNodeRef node, SFNodeRef parent)
 {
+	if (node == SFNullNode)
+		return;
+	
 	SFNodeForRef(node)->parent = parent;
 }
 
 SFNodeRef SFNodeFirstChild(SFNodeRef parent)
 {
+	if (parent == SFNullNode)
+		return SFNullNode;
+	
 	return SFNodeForRef(parent)->firstChild;
 }
 void SFNodeSetFirstChild(SFNodeRef parent, SFNodeRef child)
 {
+	if (parent == SFNullNode)
+		return;
+	
 	SFNodeForRef(parent)->firstChild = child;
 }
 
 SFNodeRef SFNodeNextInList(SFNodeRef node)
 {
-	SFNode *n = SFNodeForRef(node);
+	if (node == SFNullNode)
+		return;
 	
 	return SFNodeForRef(node)->next;
 }
 //Beware! This function simply sets the next pointer, it doesn't attempt to do any splicing
 void SFNodeSetNextInList(SFNodeRef node, SFNodeRef nextNode)
 {
+	if (node == SFNullNode)
+		return;
+	
 	SFNodeForRef(node)->next = nextNode;
 }
 
 const char* SFNodeHead(SFNodeRef node)
 {
-	if (SFNodeGetType(node) == SFNodeTypeList)
+	if (node && SFNodeGetType(node) == SFNodeTypeList)
 		return SFNodeForRef(node)->stringValue;
 	return NULL;
 }
 void SFNodeSetHead(SFNodeRef node, const char *head)
 {
+	if (node == SFNullNode)
+		return;
+	
 	if (SFNodeGetType(node) == SFNodeTypeList)
 		SFNodeForRef(node)->stringValue = head;
 }
@@ -509,6 +568,8 @@ void SFNodeAddString(SFNodeRef parent, const char* str)
 }
 void SFNodeAddChild(SFNodeRef parent, SFNodeRef node)
 {
+	if (parent == SFNullNode || node == SFNullNode)
+		return;
 	
 	//If the parent isn't a list, then it can't have any children. Ignore the request to add a child.
 	if (SFNodeGetType(parent) != SFNodeTypeList)
@@ -546,6 +607,9 @@ void SFNodeAddChild(SFNodeRef parent, SFNodeRef node)
 
 size_t SFNodeStringValueLength(SFNodeRef node)
 {
+	if (node == SFNullNode)
+		return 0;
+	
 	if (SFNodeGetType(node) == SFNodeTypeList)
 	{
 		const char *stringValue = SFNodeStringValue(node);
@@ -558,12 +622,15 @@ size_t SFNodeStringValueLength(SFNodeRef node)
 }
 const char* SFNodeStringValue(SFNodeRef node)
 {
-	if (SFNodeGetType(node) == SFNodeTypeString)
+	if (node && SFNodeGetType(node) == SFNodeTypeString)
 		return SFNodeForRef(node)->stringValue;
 	return NULL;
 }
 void SFNodeSetStringValue(SFNodeRef node, const char *str)
 {
+	if (node == SFNullNode)
+		return;
+	
 	if (SFNodeGetType(node) == SFNodeTypeString)
 		SFNodeForRef(node)->stringValue = str;
 }
@@ -572,7 +639,10 @@ void SFNodeSetStringValue(SFNodeRef node, const char *str)
 //SFNodeCopyStringValueTo() does NOT append a NULL character.
 //`stringDestination` must be large enough to hold `SFNodeStringValueLength(node)` characters.
 _Bool SFNodeCopyStringValueTo(SFNodeRef node, const char* stringDestination)
-{	
+{
+	if (node == SFNullNode)
+		return;
+	
 	if (SFNodeStringValueLength(node) == 0)
 		return false;
 	
@@ -585,35 +655,164 @@ _Bool SFNodeCopyStringValueTo(SFNodeRef node, const char* stringDestination)
 
 size_t SFNodeRepresentationLength(SFNodeRef node)
 {
+	//TODO: Needs implementation
 	return 0;
 }
 _Bool SFNodeRepresentation(SFNodeRef node, const char* stringDestination)
 {
+	//TODO: Needs implementation
 	return false;
 }
 
 
 void SFNodePrintRepresentation(SFNodeRef node)
 {
+	if (node == SFNullNode)
+		return;
+	
+	SFNodePrintRepresentationInner(node, 0);
+}
+void SFNodePrintRepresentationInner(SFNodeRef node, int indentation)
+{
+	if (node == SFNullNode)
+		return;
+	
+	int i;
+	for (i = 0; i < indentation; i++)
+	{
+		printf("    ");
+	}
+	
     if (SFNodeGetType(node) == SFNodeTypeList)
     {
-        printf(" (");
-        
-        if (SFNodeHead(node) != NULL)
-            printf("%s", SFNodeHead(node));
-        
-        SFNodeRef r = SFNodeFirstChild(node);
-        while (r != SFNullNode)
-        {
-            SFNodePrintRepresentation(r);
-            r = SFNodeNextInList(r);
-        }
-        
-        printf(")");
+		SFNodePrintRepresentationOfList(node, indentation);
     }
     else if (SFNodeGetType(node) == SFNodeTypeString)
-    {        
-        if (SFNodeStringValue(node) != NULL)
-            printf(" `%s`", SFNodeStringValue(node));
+    {  
+		SFNodePrintRepresentationOfString(node);
     }
+}
+
+void SFNodePrintRepresentationOfList(SFNodeRef node, int indentation)
+{
+	if (node == SFNullNode)
+		return;
+	
+	const char *head = SFNodeHead(node);
+	_Bool isRoot = head == NULL;
+	
+	if (!isRoot)
+		printf("(%s", SFNodeHead(node));
+	
+	SFNodeRef r = SFNodeFirstChild(node);
+	_Bool isScalarOnly = true;
+	if (isRoot)
+	{
+		isScalarOnly = false;
+	}
+	else
+	{
+		while (r != SFNullNode)
+		{
+			if (SFNodeGetType(r) == SFNodeTypeList)
+				isScalarOnly = false;
+			
+			r = SFNodeNextInList(r);
+		}
+	}
+	
+	r = SFNodeFirstChild(node);
+	_Bool isFirstChild = true;
+	while (r != SFNullNode)
+	{
+		if (isRoot)
+		{
+			if (!isFirstChild)
+				printf("\n\n");
+			
+			SFNodePrintRepresentationInner(r, 0);
+		}
+		else if (isScalarOnly)
+		{
+			printf(" ");
+			SFNodePrintRepresentationInner(r, 0);
+		}
+		else
+		{
+			printf("\n");
+			SFNodePrintRepresentationInner(r, indentation + 1);
+		}
+		
+		r = SFNodeNextInList(r);
+		isFirstChild = false;
+	}
+	
+	if (!isRoot)
+		printf(")");
+}
+void SFNodePrintRepresentationOfString(SFNodeRef node)
+{
+	if (node == SFNullNode)
+		return;
+	
+	const char *strval = SFNodeStringValue(node);
+	if (strval == NULL)
+		return;
+		
+	//Find out if scannerStrval can be written as a verbatim string or bracketed string
+	_Bool isVerbatimString = true;
+	_Bool isBracketedString = true;
+	
+	int bracketedStringNestingLevel = 0;
+	const char *scannerStrval = strval;
+	for (; *scannerStrval != '\0'; scannerStrval++)
+	{
+		if (isspace(*scannerStrval))
+		{
+			isVerbatimString = false;
+		}
+		
+		if (*scannerStrval == '[')
+			bracketedStringNestingLevel++;
+		else if (*scannerStrval == ']')
+			bracketedStringNestingLevel--;
+		
+		if (bracketedStringNestingLevel == -1)
+			isBracketedString = false;
+		
+		switch (*scannerStrval) {
+			case '#':
+			case '`':
+			case '(':
+			case ')':
+			case '[':
+			case ']':
+			case '{':
+			case '}':
+				isVerbatimString = false;
+			default: continue;
+		}
+	}
+	
+	
+	if (isVerbatimString)
+	{
+		printf("%s", strval);
+	}
+	else if (isBracketedString && bracketedStringNestingLevel == 0)
+	{
+		printf("[%s]", strval);
+	}
+	else
+	{
+		printf("`");
+		for (; *strval != '\0'; strval++)
+		{
+			if (*strval == '`')
+				printf("`");
+			
+			printf("%c", *strval);
+		}
+		printf("`");
+	}
 }

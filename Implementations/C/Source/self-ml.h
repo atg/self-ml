@@ -78,7 +78,7 @@ void SFNodeAddChild(SFNodeRef parent, SFNodeRef node);
 
 #pragma mark Representations
 
-size_t SFNodeRepresentationLength(SFNodeRef node);
-_Bool SFNodeRepresentation(SFNodeRef node, const char* stringDestination);
+//size_t SFNodeRepresentationLength(SFNodeRef node);
+//_Bool SFNodeRepresentation(SFNodeRef node, const char* stringDestination);
 
 void SFNodePrintRepresentation(SFNodeRef node);
