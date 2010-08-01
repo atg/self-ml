@@ -48,3 +48,11 @@
 # As a general rule, heads should be part of a finite set of expected types, whereas strings may contain any valid data
 # If you have something like this, you're probably doing something wrong
 (parent (child1 foo bar) (child2 foo bar) (child3 foo bar))
+
+# Of course, all rules have exceptions. You might want to use heads to represent arbitrary keys in a dictionary
+(urls
+    (^polls/$                          mysite.polls.views.index)
+    (^polls/(?P<poll_id>\d+)/$         mysite.polls.views.detail)
+    (^polls/(?P<poll_id>\d+)/results/$ mysite.polls.views.results)
+    (^polls/(?P<poll_id>\d+)/vote/$    mysite.polls.views.vote)
+)
