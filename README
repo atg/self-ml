@@ -51,8 +51,8 @@
 
 # Of course, all rules have exceptions. You might want to use heads to represent arbitrary keys in a dictionary
 (urls
-    (^polls/$                          mysite.polls.views.index)
-    (^polls/(?P<poll_id>\d+)/$         mysite.polls.views.detail)
-    (^polls/(?P<poll_id>\d+)/results/$ mysite.polls.views.results)
-    (^polls/(?P<poll_id>\d+)/vote/$    mysite.polls.views.vote)
+    ([^polls/$]                          mysite.polls.views.index)
+    ([^polls/(?P<poll_id>\d+)/$]         mysite.polls.views.detail)
+    ([^polls/(?P<poll_id>\d+)/results/$] mysite.polls.views.results)
+    ([^polls/(?P<poll_id>\d+)/vote/$]    mysite.polls.views.vote)
 )
