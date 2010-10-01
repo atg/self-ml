@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0CB57B471255844400F117F0 /* testml.m in Sources */ = {isa = PBXBuildFile; fileRef = 0CB57B461255844400F117F0 /* testml.m */; };
+		0CB57B501255848D00F117F0 /* self-ml.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* self-ml.framework */; };
 		75B8B16A12554F5300A93A09 /* SFONode.h in Headers */ = {isa = PBXBuildFile; fileRef = 75B8B16612554F5300A93A09 /* SFONode.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		75B8B16B12554F5300A93A09 /* SFONode.m in Sources */ = {isa = PBXBuildFile; fileRef = 75B8B16712554F5300A93A09 /* SFONode.m */; };
 		75B8B16C12554F5300A93A09 /* SFONodeChild.h in Headers */ = {isa = PBXBuildFile; fileRef = 75B8B16812554F5300A93A09 /* SFONodeChild.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -19,6 +21,8 @@
 
 /* Begin PBXFileReference section */
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		0CB57B3D1255838100F117F0 /* testml */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testml; sourceTree = BUILT_PRODUCTS_DIR; };
+		0CB57B461255844400F117F0 /* testml.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = testml.m; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* self-ml_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "self-ml_Prefix.pch"; sourceTree = "<group>"; };
 		75B8B16612554F5300A93A09 /* SFONode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SFONode.h; path = ../../Source/SFONode.h; sourceTree = SOURCE_ROOT; };
 		75B8B16712554F5300A93A09 /* SFONode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SFONode.m; path = ../../Source/SFONode.m; sourceTree = SOURCE_ROOT; };
@@ -32,6 +36,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0CB57B3B1255838100F117F0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0CB57B501255848D00F117F0 /* self-ml.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8DC2EF560486A6940098B216 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -47,6 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				8DC2EF5B0486A6940098B216 /* self-ml.framework */,
+				0CB57B3D1255838100F117F0 /* testml */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -54,6 +67,7 @@
 		0867D691FE84028FC02AAC07 /* self-ml */ = {
 			isa = PBXGroup;
 			children = (
+				0CB57B38125582D000F117F0 /* testml */,
 				08FB77AEFE84172EC02AAC07 /* Classes */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				089C1665FE841158C02AAC07 /* Resources */,
@@ -90,6 +104,14 @@
 				75B8B16912554F5300A93A09 /* SFONodeChild.m */,
 			);
 			name = Classes;
+			sourceTree = "<group>";
+		};
+		0CB57B38125582D000F117F0 /* testml */ = {
+			isa = PBXGroup;
+			children = (
+				0CB57B461255844400F117F0 /* testml.m */,
+			);
+			name = testml;
 			sourceTree = "<group>";
 		};
 		1058C7B0FEA5585E11CA2CBB /* Linked Frameworks */ = {
@@ -133,6 +155,22 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		0CB57B3C1255838100F117F0 /* testml */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0CB57B41125583B600F117F0 /* Build configuration list for PBXNativeTarget "testml" */;
+			buildPhases = (
+				0CB57B3A1255838100F117F0 /* Sources */,
+				0CB57B3B1255838100F117F0 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = testml;
+			productName = testml;
+			productReference = 0CB57B3D1255838100F117F0 /* testml */;
+			productType = "com.apple.product-type.tool";
+		};
 		8DC2EF4F0486A6940098B216 /* self-ml */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "self-ml" */;
@@ -159,13 +197,21 @@
 			isa = PBXProject;
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "self-ml" */;
 			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* self-ml */;
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				8DC2EF4F0486A6940098B216 /* self-ml */,
+				0CB57B3C1255838100F117F0 /* testml */,
 			);
 		};
 /* End PBXProject section */
@@ -182,6 +228,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0CB57B3A1255838100F117F0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0CB57B471255844400F117F0 /* testml.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8DC2EF540486A6940098B216 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -206,6 +260,52 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		0CB57B3F1255838100F117F0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = /usr/local/bin;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = testml;
+			};
+			name = Debug;
+		};
+		0CB57B401255838100F117F0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = /usr/local/bin;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = testml;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
 		1DEB91AE08733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -274,6 +374,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0CB57B41125583B600F117F0 /* Build configuration list for PBXNativeTarget "testml" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0CB57B3F1255838100F117F0 /* Debug */,
+				0CB57B401255838100F117F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "self-ml" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
