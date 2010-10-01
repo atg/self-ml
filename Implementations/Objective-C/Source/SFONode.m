@@ -94,7 +94,7 @@
 	const char* head = SFNodeHead(node);
 	if (!head)
 		return @"";
-		
+	
 	return [[[NSString alloc] initWithUTF8String:head] autorelease] ?: @"";
 }
 - (void)setHead:(NSString *)headString
@@ -106,6 +106,8 @@
 	SFNodeSetHead(node, head);
 }
 
+
+@synthesize children;
 
 //IMPLEMENT OTHER PROPERTIES
 
