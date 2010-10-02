@@ -151,11 +151,15 @@ SFNodeRef SFNodeCopy(SFNodeRef nodeRef)
 	
 	if (SFNodeHead(nodeRef))
 	{
-		
+		const char *strval = SFNodeHead(nodeRef);
+		size_t strvalLength = strlen(strval);
+		const char *newStrval = malloc((strvalLength + 1) * sizeof(char));
+		strlcpy(newStrval, strval, strvalLength + 1);
+		SFNodeSetHead(nodeRef, newStrval);
 	}
 	
-	SFNodeSetNextInList(SFNodeCopy(SFNodeNextInList(nodeRef)));
-	SFNodeSetFirstChild(SFNodeCopy(SFNodeFirstChild(nodeRef)));
+	SFNodeSetNextInList(newNode, SFNodeCopy(SFNodeNextInList(nodeRef)));
+	SFNodeSetFirstChild(newNode, SFNodeCopy(SFNodeFirstChild(nodeRef)));
 	
 	return newNode;
 }
