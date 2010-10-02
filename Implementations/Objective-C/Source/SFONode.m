@@ -12,7 +12,7 @@
 @synthesize children;
 @synthesize parent;
 @synthesize rootNode;
-
+@synthesize node;
 
 #pragma mark Creation
 
@@ -107,7 +107,8 @@
 
 - (id)copyWithZone:(NSZone *)zone
 {
-	//TODO: IMPLEMENT ME
+	return [[[SFONode allocWithZone:zone] initWithNode:SFNodeCopy(node)] autorelease];
+	
 }
 
 
@@ -131,7 +132,10 @@
 }
 - (void)setHead:(NSString *)headString
 {
-	const char* head = [headString UTF8String];
+	size_t len = strlen([headString UTF8String]);
+	char* head = malloc((len + 1) * sizeof(char));
+	strlcpy(head, [headString UTF8String], (len + 1));
+	
 	if (!head || strlen(head) == 0)
 		return;
 	
@@ -145,7 +149,7 @@
 
 - (id<SFONodeChild>)childAtIndex:(NSUInteger)index
 {
-	//TODO: IMPLEMENT ME
+	return [children objectAtIndex:index];
 }
 
 - (NSUInteger)indexOfChildNode:(id<SFONodeChild>)childNode
@@ -160,18 +164,27 @@
 
 - (void)addChild:(id<SFONodeChild>)newNode
 {
-	//TODO: IMPLEMENT ME
+	id copy = [[newNode copy] autorelease];
 	
 	if ([newNode isKindOfClass:[NSString class]])
 	{
 		//Get the UTF8 value of newNode, then create a new child node and append it to node
+		size_t len = strlen([(NSString *)newNode UTF8String]);
+		char* str = malloc((len + 1) * sizeof(char));
+		strlcpy(str, [(NSString *)newNode UTF8String], (len + 1));
+		
+		SFNodeAddString(node, str);
 	}
 	else if ([newNode isKindOfClass:[SFONode class]])
 	{
 		//Copy newNode and add it as a child
+		SFNodeAddChild(node, [copy node]);
+		
+		//Remember to set the parent and root node!
+		[(SFONode *)newNode setParent:self];
+		[(SFONode *)newNode setRootNode:[self rootNode]];
 	}
-	
-	//Remember to set the parent and root node!
+	[children addObject:copy];
 }
 
 /*
@@ -216,7 +229,10 @@
 //Use NSFileHandle -> fileDescriptor -> fdopen to create a FILE* to feed to SFNodeWriteRepresentationToFile()
 - (NSString *)selfmlRepresentation
 {
-	//TODO: IMPLEMENT ME
+	NSMutableString *stringRep = [[[NSMutableString alloc] init] autorelease];
+	SFONodeWriteRepresentation([self node], stringRep);
+	return stringRep;
+	
 }
 
 //Use NSXMLDocument to create an XML string
@@ -246,5 +262,159 @@
 	SFNodeFree(node);
 	node = SFNullNode;
 }
+
+#pragma mark Functions
+void SFONodeWriteRepresentation(SFNodeRef node, NSMutableString *mstr)
+{
+    if (node == SFNullNode)
+        return;
+    
+    SFONodeWriteRepresentationInner(node, 0, mstr);
+}
+void SFONodeWriteRepresentationInner(SFNodeRef node, int indentation, NSMutableString *mstr)
+{
+    if (node == SFNullNode)
+        return;
+    
+    int i;
+    for (i = 0; i < indentation; i++)
+    {
+        [mstr appendFormat:@"    "];
+    }
+    
+    if (SFNodeGetType(node) == SFNodeTypeList)
+    {
+        SFONodeWriteRepresentationOfList(node, indentation, mstr);
+    }
+    else if (SFNodeGetType(node) == SFNodeTypeString)
+    {  
+        SFONodeWriteRepresentationOfString(node, mstr);
+    }
+}
+
+void SFONodeWriteRepresentationOfList(SFNodeRef node, int indentation, NSMutableString *mstr)
+{
+    if (node == SFNullNode)
+        return;
+	
+    const char *head = SFNodeHead(node);
+    _Bool isRoot = head == NULL;
+	
+    if (!isRoot)
+        [mstr appendFormat:@"(%s", SFNodeHead(node)];
+	
+    SFNodeRef r = SFNodeFirstChild(node);
+    _Bool isScalarOnly = true;
+    if (isRoot)
+    {
+        isScalarOnly = false;
+    }
+    else
+    {
+        while (r != SFNullNode)
+        {
+            if (SFNodeGetType(r) == SFNodeTypeList)
+                isScalarOnly = false;
+			
+            r = SFNodeNextInList(r);
+        }
+    }
+	
+    r = SFNodeFirstChild(node);
+    _Bool isFirstChild = true;
+    while (r != SFNullNode)
+    {
+        if (isRoot)
+        {
+            if (!isFirstChild)
+                [mstr appendFormat:@"\n\n"];
+            
+            SFONodeWriteRepresentationInner(r, 0, mstr);
+        }
+        else if (isScalarOnly)
+        {
+            [mstr appendFormat:@" "];
+            SFONodeWriteRepresentationInner(r, 0, mstr);
+        }
+        else
+        {
+            [mstr appendFormat:@"\n"];
+            SFONodeWriteRepresentationInner(r, indentation + 1, mstr);
+        }
+		
+        r = SFNodeNextInList(r);
+        isFirstChild = false;
+    }
+	
+    if (!isRoot)
+        [mstr appendFormat:@")"];
+}
+void SFONodeWriteRepresentationOfString(SFNodeRef node, NSMutableString *mstr)
+{
+    if (node == SFNullNode)
+        return;
+    
+    const char *strval = SFNodeStringValue(node);
+    if (strval == NULL)
+        return;
+	
+    //Find out if scannerStrval can be written as a verbatim string or bracketed string
+    _Bool isVerbatimString = true;
+    _Bool isBracketedString = true;
+    
+    int bracketedStringNestingLevel = 0;
+    const char *scannerStrval = strval;
+    for (; *scannerStrval != '\0'; scannerStrval++)
+    {
+        if (isspace(*scannerStrval))
+        {
+            isVerbatimString = false;
+        }
+        
+        if (*scannerStrval == '[')
+            bracketedStringNestingLevel++;
+        else if (*scannerStrval == ']')
+            bracketedStringNestingLevel--;
+        
+        if (bracketedStringNestingLevel == -1)
+            isBracketedString = false;
+        
+        switch (*scannerStrval) {
+            case '#':
+            case '`':
+            case '(':
+            case ')':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+                isVerbatimString = false;
+            default: continue;
+        }
+    }
+    
+    
+    if (isVerbatimString)
+    {
+        [mstr appendFormat:@"%s", strval];
+    }
+    else if (isBracketedString && bracketedStringNestingLevel == 0)
+    {
+        [mstr appendFormat:@"[%s]", strval];
+    }
+    else
+    {
+        [mstr appendFormat:@"`"];
+        for (; *strval != '\0'; strval++)
+        {
+            if (*strval == '`')
+                [mstr appendFormat:@"`"];
+			
+            [mstr appendFormat:@"%c", *strval];
+        }
+        [mstr appendFormat:@"`"];
+    }
+}
+
 
 @end

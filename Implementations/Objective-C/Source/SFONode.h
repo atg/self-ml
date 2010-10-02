@@ -42,7 +42,7 @@
 
 @property (readonly) NSUInteger childCount;
 @property (readonly) NSArray *children;
-
+@property (readonly) SFNodeRef node;
 
 //Returns nil if index is invalid
 - (id<SFONodeChild>)childAtIndex:(NSUInteger)index;
@@ -76,5 +76,11 @@
 
 - (NSString *)selfmlRepresentation;
 - (NSString *)xmlRepresentation;
+
+#pragma mark some great functions
+void SFONodeWriteRepresentation(SFNodeRef node, NSMutableString *mstr);
+void SFONodeWriteRepresentationInner(SFNodeRef node, int indentation, NSMutableString *mstr);
+void SFONodeWriteRepresentationOfList(SFNodeRef node, int indentation, NSMutableString *mstr);
+void SFONodeWriteRepresentationOfString(SFNodeRef node, NSMutableString *mstr);
 
 @end
