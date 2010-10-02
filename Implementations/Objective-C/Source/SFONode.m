@@ -62,6 +62,8 @@
 	}
 	return self;
 }
+
+
 - (id)initWithData:(NSData *)data
 {
 	SFNodeRef ref = SFNodeCreateFromString([[[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease] UTF8String]);
@@ -107,7 +109,7 @@
 
 - (id)copyWithZone:(NSZone *)zone
 {
-	return [[[SFONode allocWithZone:zone] initWithNode:SFNodeCopy(node)] autorelease];
+	return [[[SFONode allocWithZone:zone] initWithNodeRef:SFNodeCopy(node)] autorelease];
 	
 }
 
@@ -116,7 +118,7 @@
 
 - (BOOL)isEqual:(id<SFONodeChild>)otherNode
 {
-	//TODO: IMPLEMENT ME
+	return [[self selfmlRepresentation] isEqual:[otherNode selfmlRepresentation]];
 }
 
 
@@ -154,7 +156,7 @@
 
 - (NSUInteger)indexOfChildNode:(id<SFONodeChild>)childNode
 {
-	//TODO: IMPLEMENT ME
+	return [[self children] indexOfObject:childNode];
 }
 
 //TODO: IMPLEMENT OTHER PROPERTIES
@@ -214,13 +216,28 @@
 //Extract an NSArray of all child nodes with name nodeName
 - (NSArray *)extract:(NSString *)nodeName
 {
-	//TODO: IMPLEMENT ME
+	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
+	for(SFONode *child in children) {
+		if ([child sfNodeType] == SFNodeTypeList && [[child head] isEqual:nodeName]) {
+			[result addObject:child];
+		}
+	}
+	return result;
 }
 
 //Extract all strings
 - (NSArray *)extractStrings
 {
-	//TODO: IMPLEMENT ME
+	
+	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
+	for(SFONode *child in children) {
+		if([child sfNodeType] == SFNodeTypeString && [[child head] length] > 0) {
+			[result addObject:child];
+		}
+	}
+	
+	return result;
+
 }
 
 

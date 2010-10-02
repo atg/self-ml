@@ -4,9 +4,16 @@
 int main (int argc, const char * argv[]) {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	
-	SFONode *testNode = [[SFONode alloc] initWithString:@"(foo bar)"];
-	NSLog(@"Test '%@'", [[[testNode children] lastObject] head]);
+	SFONode *testNode1 = [SFONode node];
+	SFONode *testNode2 = [SFONode node];
+	[testNode1 setHead:@"foo"];
+	[testNode2 setHead:@"bar"];
 	
-	[pool release];
+	[testNode1 addChild:testNode2];
+	
+	
+	NSLog(@"Test '%@'", [testNode1 selfmlRepresentation]);
+	
+	[pool drain];
 	return 0;
 }
