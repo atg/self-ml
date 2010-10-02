@@ -131,6 +131,35 @@ SFNodeRef SFNodeCreateFromFile(FILE *file)
 	return node;
 }
 
+SFNodeRef SFNodeCopy(SFNodeRef nodeRef)
+{
+	if (nodeRef == SFNullNode)
+		return SFNullNode;
+	
+	SFNodeRef newNode = SFNodeCreate();
+	if (newNode == SFNullNode)
+		return SFNullNode;
+	
+	if (SFNodeStringValue(nodeRef))
+	{
+		const char *strval = SFNodeStringValue(nodeRef);
+		size_t strvalLength = strlen(strval);
+		const char *newStrval = malloc((strvalLength + 1) * sizeof(char));
+		strlcpy(newStrval, strval, strvalLength + 1);
+		SFNodeSetStringValue(nodeRef, newStrval);
+	}
+	
+	if (SFNodeHead(nodeRef))
+	{
+		
+	}
+	
+	SFNodeSetNextInList(SFNodeCopy(SFNodeNextInList(nodeRef)));
+	SFNodeSetFirstChild(SFNodeCopy(SFNodeFirstChild(nodeRef)));
+	
+	return newNode;
+}
+
 //Recursively free the subtree of `nodeRef`
 void SFNodeFree(SFNodeRef nodeRef)
 {
