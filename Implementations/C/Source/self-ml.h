@@ -45,6 +45,9 @@ SFNodeRef SFNodeCreateFromString(const char* sourceString);
 
 SFNodeRef SFNodeCreateFromFile(FILE *file);
 
+//Perform a deep copy
+SFNodeRef SFNodeCopy(SFNodeRef nodeRef);
+
 //Frees a node and all subnodes, incuding strings
 void SFNodeFree(SFNodeRef node);
 
@@ -77,6 +80,7 @@ _Bool SFNodeCopyStringValueTo(SFNodeRef node, const char* stringDestination);
 
 void SFNodeAddString(SFNodeRef parent, const char* str);
 void SFNodeAddChild(SFNodeRef parent, SFNodeRef node);
+
 
 #pragma mark Representations
 
