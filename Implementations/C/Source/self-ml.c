@@ -132,13 +132,15 @@ SFNodeRef SFNodeCreateFromFile(FILE *file)
 }
 
 SFNodeRef SFNodeCopy(SFNodeRef nodeRef)
-{
+{	
 	if (nodeRef == SFNullNode)
 		return SFNullNode;
 	
 	SFNodeRef newNode = SFNodeCreate();
 	if (newNode == SFNullNode)
 		return SFNullNode;
+	
+	SFNodeSetType(newNode, SFNodeGetType(nodeRef));
 	
 	if (SFNodeStringValue(nodeRef))
 	{
@@ -164,22 +166,61 @@ SFNodeRef SFNodeCopy(SFNodeRef nodeRef)
 	return newNode;
 }
 
+void SFNodeFreeNonRecursive(SFNodeRef nodeRef)
+{
+	if (nodeRef == SFNullNode)
+		return;
+	
+	if (SFNodeGetType(nodeRef) == SFNodeTypeList)
+	{
+		if (SFNodeHead(nodeRef))
+		{
+			free((void *)SFNodeHead(nodeRef));
+			SFNodeSetHead(nodeRef, NULL);
+		}
+	}
+	else if (SFNodeGetType(nodeRef) == SFNodeTypeString)
+	{
+		if (SFNodeStringValue(nodeRef))
+		{
+			free((void *)SFNodeStringValue(nodeRef));
+			SFNodeSetStringValue(nodeRef, NULL);
+		}
+	}
+	
+	free(nodeRef);
+}
+
 //Recursively free the subtree of `nodeRef`
 void SFNodeFree(SFNodeRef nodeRef)
 {
 	if (nodeRef == SFNullNode)
 		return;
 	
-	if (SFNodeStringValue(nodeRef))
-		free((void *)SFNodeStringValue(nodeRef));
+	if (SFNodeGetType(nodeRef) == SFNodeTypeList)
+	{
+		if (SFNodeHead(nodeRef))
+		{
+			free((void *)SFNodeHead(nodeRef));
+			SFNodeSetHead(nodeRef, NULL);
+		}
+				
+		SFNodeFree(SFNodeNextInList(nodeRef));
+		SFNodeSetNextInList(nodeRef, SFNullNode);
+		
+		SFNodeFree(SFNodeFirstChild(nodeRef));
+		SFNodeSetFirstChild(nodeRef, SFNullNode);
+	}
+	else if (SFNodeGetType(nodeRef) == SFNodeTypeString)
+	{
+		if (SFNodeStringValue(nodeRef))
+		{
+			free((void *)SFNodeStringValue(nodeRef));
+			SFNodeSetStringValue(nodeRef, NULL);
+		}
+	}
 	
-	if (SFNodeHead(nodeRef))
-		free((void *)SFNodeHead(nodeRef));
-	
-	SFNodeFree(SFNodeNextInList(nodeRef));
-	SFNodeFree(SFNodeFirstChild(nodeRef));
-	
-	free(SFNodeForRef(nodeRef));
+	free(nodeRef);
 }
 
 
@@ -618,6 +659,8 @@ void SFNodeSetNextInList(SFNodeRef node, SFNodeRef nextNode)
 {
 	if (node == SFNullNode)
 		return;
+	
+	printf("Set next: %d\n", nextNode);
 	
 	SFNodeForRef(node)->next = nextNode;
 }

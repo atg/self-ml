@@ -23,7 +23,7 @@
 
 - (id)init;
 - (id)initWithString:(NSString *)string;
-- (id)initWithList:(NSString *)strings; // [head, arg1, arg2, arg3, ...]
+- (id)initWithList:(NSArray *)strings; // [head, arg1, arg2, arg3, ...]
 - (id)initWithData:(NSData *)data;
 - (id)initWithNodeRef:(SFNodeRef)ref; //Designated Initializer
 
@@ -40,9 +40,9 @@
 
 @property (readwrite, assign) SFONode *rootNode; //readwrite for internal reasons. DExternal classes should not use this setter
 
-@property (readonly) NSUInteger childCount;
+@property (readonly, assign) NSUInteger childCount;
 @property (readonly) NSArray *children;
-@property (readonly) SFNodeRef node;
+@property (readonly, assign) SFNodeRef nodeRef;
 
 //Returns nil if index is invalid
 - (id<SFONodeChild>)childAtIndex:(NSUInteger)index;

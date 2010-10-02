@@ -12,7 +12,6 @@
 @synthesize children;
 @synthesize parent;
 @synthesize rootNode;
-@synthesize node;
 
 #pragma mark Creation
 
@@ -47,7 +46,7 @@
 	SFNodeRef ref = SFNodeCreateFromString([string UTF8String]);
 	return [self initWithNodeRef:ref];
 }
-- (id)initWithList:(NSString *)strings
+- (id)initWithList:(NSArray *)strings
 {
 	if (self = [self init])
 	{
@@ -77,6 +76,7 @@
 	{
 		node = ref;
 		
+		rootNode = self;
 		
 		//Check that the backing node isn't null
 		if (node == SFNullNode)
@@ -124,6 +124,11 @@
 
 #pragma mark Properties and Getters
 
+- (SFNodeRef)nodeRef
+{
+	return node;
+}
+
 - (NSString *)head
 {
 	const char* head = SFNodeHead(node);
@@ -168,7 +173,7 @@
 {
 	id copy = [[newNode copy] autorelease];
 	
-	if ([newNode isKindOfClass:[NSString class]])
+	if ([newNode sfNodeType] == SFNodeTypeString)
 	{
 		//Get the UTF8 value of newNode, then create a new child node and append it to node
 		size_t len = strlen([(NSString *)newNode UTF8String]);
@@ -177,10 +182,10 @@
 		
 		SFNodeAddString(node, str);
 	}
-	else if ([newNode isKindOfClass:[SFONode class]])
+	else if ([newNode sfNodeType] == SFNodeTypeList)
 	{
 		//Copy newNode and add it as a child
-		SFNodeAddChild(node, [copy node]);
+		SFNodeAddChild(node, [copy nodeRef]);
 		
 		//Remember to set the parent and root node!
 		[(SFONode *)newNode setParent:self];
@@ -247,7 +252,7 @@
 - (NSString *)selfmlRepresentation
 {
 	NSMutableString *stringRep = [[[NSMutableString alloc] init] autorelease];
-	SFONodeWriteRepresentation([self node], stringRep);
+	SFONodeWriteRepresentation([self nodeRef], stringRep);
 	return stringRep;
 	
 }
@@ -256,28 +261,36 @@
 - (NSString *)xmlRepresentation
 {
 	//TODO: IMPLEMENT ME
+	return nil;
 }
 
 
 #pragma mark Cleanup
 
+/*
 - (void)dealloc
 {
-	[self dealloc];
+	[self cleanUp];
+	
+	NSLog(@" -");
+	NSLog(@"children = %d", [children count]);
+	[children release];
+	
 	[super dealloc];
 }
+*/
 - (void)finalize
 {
 	[self cleanUp];
 	[super finalize];
 }
 - (void)cleanUp
-{
-	if (node == SFNullNode)
-		return;
-	
-	SFNodeFree(node);
-	node = SFNullNode;
+{	
+	if (node != SFNullNode)
+	{
+		SFNodeFreeNonRecursive(node);
+		node = SFNullNode;
+	}
 }
 
 #pragma mark Functions

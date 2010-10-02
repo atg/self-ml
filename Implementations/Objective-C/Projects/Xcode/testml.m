@@ -11,8 +11,10 @@ int main (int argc, const char * argv[]) {
 	
 	[testNode1 addChild:testNode2];
 	
-	
 	NSLog(@"Test '%@'", [testNode1 selfmlRepresentation]);
+	
+	NSLog(@"[testNode1 nodeRef] = %d", [testNode1 nodeRef]);
+	SFNodePrintRepresentation([testNode1 nodeRef]);
 	
 	[pool drain];
 	return 0;

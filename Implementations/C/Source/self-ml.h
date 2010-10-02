@@ -48,6 +48,8 @@ SFNodeRef SFNodeCreateFromFile(FILE *file);
 //Perform a deep copy
 SFNodeRef SFNodeCopy(SFNodeRef nodeRef);
 
+void SFNodeFreeNonRecursive(SFNodeRef nodeRef);
+
 //Frees a node and all subnodes, incuding strings
 void SFNodeFree(SFNodeRef node);
 

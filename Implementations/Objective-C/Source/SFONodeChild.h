@@ -3,7 +3,7 @@
 
 //You can be assured that any child nodes conform to this protocol
 
-@protocol SFONodeChild
+@protocol SFONodeChild<NSObject, NSCopying>
 
 - (SFNodeType)sfNodeType;
 
