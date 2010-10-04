@@ -170,28 +170,30 @@
 #pragma mark Tree Manipulation
 
 - (void)addChild:(id<SFONodeChild>)newNode
-{
-	id copy = [[newNode copy] autorelease];
+{	
+	id item = newNode;
 	
-	if ([newNode sfNodeType] == SFNodeTypeString)
+	if ([item sfNodeType] == SFNodeTypeString)
 	{
-		//Get the UTF8 value of newNode, then create a new child node and append it to node
-		size_t len = strlen([(NSString *)newNode UTF8String]);
+		item = [[item copy] autorelease];
+		
+		//Get the UTF8 value of item, then create a new child node and append it to node
+		size_t len = strlen([(NSString *)item UTF8String]);
 		char* str = malloc((len + 1) * sizeof(char));
-		strlcpy(str, [(NSString *)newNode UTF8String], (len + 1));
+		strlcpy(str, [(NSString *)item UTF8String], (len + 1));
 		
 		SFNodeAddString(node, str);
 	}
-	else if ([newNode sfNodeType] == SFNodeTypeList)
+	else if ([item sfNodeType] == SFNodeTypeList)
 	{
-		//Copy newNode and add it as a child
-		SFNodeAddChild(node, [copy nodeRef]);
+		//Add item as a child
+		SFNodeAddChild(node, [item nodeRef]);
 		
 		//Remember to set the parent and root node!
-		[(SFONode *)newNode setParent:self];
-		[(SFONode *)newNode setRootNode:[self rootNode]];
+		[(SFONode *)item setParent:self];
+		[(SFONode *)item setRootNode:[self rootNode]];
 	}
-	[children addObject:copy];
+	[children addObject:item];
 }
 
 /*
