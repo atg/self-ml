@@ -356,13 +356,21 @@ void SFONodeWriteRepresentationOfList(SFNodeRef node, int indentation, NSMutable
     _Bool isFirstChild = true;
     while (r != SFNullNode)
     {
-        if (isRoot)
+		_Bool isScalar = SFNodeGetType(r) == SFNodeTypeString;
+		_Bool isSingleton = SFNodeGetType(r) == SFNodeTypeList && SFNodeFirstChild(r) == SFNullNode;
+		
+		if (isRoot)
         {
             if (!isFirstChild)
                 [mstr appendFormat:@"\n\n"];
             
             SFONodeWriteRepresentationInner(r, 0, mstr);
         }
+		else if (isFirstChild && (isScalar || isSingleton))
+		{
+			[mstr appendFormat:@" "];
+            SFONodeWriteRepresentationInner(r, 0, mstr);
+		}
         else if (isScalarOnly)
         {
             [mstr appendFormat:@" "];
