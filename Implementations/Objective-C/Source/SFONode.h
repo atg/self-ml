@@ -3,7 +3,7 @@
 #import "SFONodeChild.h"
 
 #ifndef SELFML
-#define SELFML(items...) [SFONode nodeFromArray:[NSArray arrayWithObjects:items, nil]];
+#define SELFML(items...) [SFONode nodeFromList:[NSArray arrayWithObjects:items, nil]];
 #endif
 
 @interface SFONode : NSObject<NSCopying, SFONodeChild>
