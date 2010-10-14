@@ -1,5 +1,9 @@
 #import "SFONode.h"
 
+#ifndef SFO_UTF8_TO_NSSTRING
+#define SFO_UTF8_TO_NSSTRING(utf) [[[NSString alloc] initWithUTF8String:utf] autorelease]
+#endif
+
 @interface SFONode ()
 
 - (void)cleanUp;
@@ -333,7 +337,7 @@ void SFONodeWriteRepresentationOfList(SFNodeRef node, int indentation, NSMutable
     _Bool isRoot = head == NULL;
 	
     if (!isRoot)
-        [mstr appendFormat:@"(%s", SFNodeHead(node)];
+        [mstr appendFormat:@"(%@", SFO_UTF8_TO_NSSTRING(SFNodeHead(node))];
 	
     SFNodeRef r = SFNodeFirstChild(node);
     _Bool isScalarOnly = true;
@@ -436,11 +440,11 @@ void SFONodeWriteRepresentationOfString(SFNodeRef node, NSMutableString *mstr)
     
     if (isVerbatimString)
     {
-        [mstr appendFormat:@"%s", strval];
+        [mstr appendString:SFO_UTF8_TO_NSSTRING(strval)];
     }
     else if (isBracketedString && bracketedStringNestingLevel == 0)
     {
-        [mstr appendFormat:@"[%s]", strval];
+        [mstr appendFormat:@"[%@]", SFO_UTF8_TO_NSSTRING(strval)];
     }
     else
     {

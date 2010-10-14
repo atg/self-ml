@@ -4,7 +4,7 @@
 int main (int argc, const char * argv[]) {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	
-	SFONode *testNode1 = [SFONode nodeFromString:@"(zone\n        meta.preprocessor.diagnostic.c\n        (start\n            (regex [^\\s*#\\s*(error|warning)\\b]))\n        (zone\n            punctuation.separator.continuation.c\n            (match\n                (regex [(?>\\\\s*\n)])))\n        (end\n            (regex $)))"];
+	SFONode *testNode1 = [SFONode nodeFromString:@"(test鼀鼀§¡~å˚Ωø¬z ∫ßµ鼉z)"];
 	/*SFONode *testNode2 = [SFONode node];
 	[testNode1 setHead:@"foo"];
 	[testNode2 setHead:@"bar"];
