@@ -4,7 +4,7 @@
 int main (int argc, const char * argv[]) {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	
-	SFONode *testNode1 = [SFONode nodeFromString:@"(test鼀鼀§¡~å˚Ωø¬z ∫ßµ鼉z)"];
+	SFONode *testNode1 = [SFONode nodeFromString:@"(test鼀⎋鼀§¡~å˚Ωø¬z ∫ßµ鼉z)"];
 	/*SFONode *testNode2 = [SFONode node];
 	[testNode1 setHead:@"foo"];
 	[testNode2 setHead:@"bar"];
