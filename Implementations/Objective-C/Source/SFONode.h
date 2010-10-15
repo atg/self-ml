@@ -8,6 +8,7 @@
 
 @interface SFONode : NSObject<NSCopying, SFONodeChild>
 {
+    SFONode *rootNode;
 	SFONode *parent;
 	SFNodeRef node;
 	NSMutableArray *children;
