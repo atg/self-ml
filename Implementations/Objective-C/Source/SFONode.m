@@ -35,6 +35,10 @@
 {
 	return [[[self alloc] initWithData:data] autorelease];
 }
++ (id)nodeWithContentsOfFile:(NSString *)path
+{
+	return [[[self alloc] initWithContentsOfFile:path] autorelease];
+}
 + (id)nodeFromNodeRef:(SFNodeRef)ref
 {
 	return [[[self alloc] initWithNodeRef:ref] autorelease];
@@ -71,6 +75,16 @@
 {
 	SFNodeRef ref = SFNodeCreateFromString([[[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease] UTF8String]);
 	return [self initWithNodeRef:ref];
+}
+- (id)initWithContentsOfFile:(NSString *)path
+{
+	NSError *err = nil;
+	NSString *str = [[NSString alloc] initWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&err];
+	
+	if (!str || err)
+		return nil;
+	
+	return [self initWithString:str];
 }
 
 //Designated Initializer
