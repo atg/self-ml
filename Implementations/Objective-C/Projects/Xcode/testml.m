@@ -13,7 +13,7 @@ int main (int argc, const char * argv[]) {
 	*/
 	NSLog(@"Test '%@'", [testNode1 selfmlRepresentation]);
 	
-	NSLog(@"[testNode1 nodeRef] = %d", [testNode1 nodeRef]);
+	NSLog(@"[testNode1 nodeRef] = %@", [[[testNode1 children] lastObject] extractStrings]);
 	SFNodePrintRepresentation([testNode1 nodeRef]);
 	
 	[pool drain];

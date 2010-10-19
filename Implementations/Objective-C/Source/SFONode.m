@@ -92,6 +92,13 @@
 {
 	if (self = [super init])
 	{
+		if (SFNodeGetType(ref) == SFNodeTypeString)
+		{
+			if (!SFNodeStringValue(ref))
+				return @"";
+			return [NSString stringWithUTF8String:SFNodeStringValue(ref)];
+		}
+		
 		node = ref;
 		
 		rootNode = self;
@@ -116,7 +123,8 @@
 		currentChild = SFNodeFirstChild(node);
 		while (currentChild != SFNullNode)
 		{
-			[children addObject:[[self class] nodeFromNodeRef:currentChild]];
+			id newNode = [[self class] nodeFromNodeRef:currentChild];
+			[children addObject:newNode];
 			currentChild = SFNodeNextInList(currentChild);
 		}
 	}
@@ -253,7 +261,6 @@
 //Extract all strings
 - (NSArray *)extractStrings
 {
-	
 	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
 	for(SFONode *child in children) {
 		if([child sfNodeType] == SFNodeTypeString) {
