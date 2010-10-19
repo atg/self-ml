@@ -256,7 +256,7 @@
 	
 	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
 	for(SFONode *child in children) {
-		if([child sfNodeType] == SFNodeTypeString && [[child head] length] > 0) {
+		if([child sfNodeType] == SFNodeTypeString) {
 			[result addObject:child];
 		}
 	}
