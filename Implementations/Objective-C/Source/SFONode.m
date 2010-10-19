@@ -262,7 +262,40 @@
 	}
 	
 	return result;
+}
 
+- (NSArray *)extractLists
+{
+	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
+	for(SFONode *child in children) {
+		if([child sfNodeType] == SFNodeTypeList) {
+			[result addObject:child];
+		}
+	}
+	
+	return result;
+}
+
+- (id)firstIfString
+{
+	id first = [self first];
+	if ([first sfNodeType] == SFNodeTypeString)
+		return first;
+	return nil;
+}
+- (id)first
+{
+	return [[self children] firstObject];
+}
+- (NSArray *)rest
+{
+	if ([children count] >= 2)
+		return [children subarrayWithRange:NSMakeRange(1, [children count] - 1)];
+	return nil;
+}
+- (void)valueForKey:(NSString *)key
+{
+	return [[self extract:key] firstObject];
 }
 
 
