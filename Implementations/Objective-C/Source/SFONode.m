@@ -271,6 +271,19 @@
 	return result;
 }
 
+//Extract singleton nodes (like) (this)
+- (NSArray *)extractSingletonNodes
+{
+	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
+	for(SFONode *child in children) {
+		if([child sfNodeType] == SFNodeTypeList && [[child head] length] > 0 && [child childCount] == 0) {
+			[result addObject:child];
+		}
+	}
+	
+	return result;
+}
+
 - (NSArray *)extractLists
 {
 	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
@@ -300,9 +313,22 @@
 		return [children subarrayWithRange:NSMakeRange(1, [children count] - 1)];
 	return nil;
 }
-- (void)valueForKey:(NSString *)key
+- (id)valueForKey:(NSString *)key
 {
 	return [[self extract:key] firstObject];
+}
+- (BOOL)hasSingletonNodeWithHead:(NSString *)shead
+{
+	for (SFONode *child in children)
+	{
+		if ([child sfNodeType] == SFNodeTypeList && [child childCount] == 0)
+		{
+			if ([[child head] isEqual:shead])
+				return YES;
+		}
+	}
+	
+	return NO;
 }
 
 

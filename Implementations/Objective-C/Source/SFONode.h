@@ -3,7 +3,7 @@
 #import "SFONodeChild.h"
 
 #ifndef SELFML
-#define SELFML(items...) [SFONode nodeFromList:[NSArray arrayWithObjects:items, nil]];
+#define SELFML(items...) [SFONode nodeFromList:[NSArray arrayWithObjects:items, nil]]
 #endif
 
 @interface SFONode : NSObject<NSCopying, SFONodeChild>
@@ -71,6 +71,18 @@
 
 //Extract all strings
 - (NSArray *)extractStrings;
+
+//Extract singleton nodes (like) (this)
+- (NSArray *)extractSingletonNodes;
+
+//Extract all strings
+- (NSArray *)extractLists;
+
+//Return a node with a specific head
+- (id)valueForKey:(NSString *)key;
+
+//Query the existence of a singleton node with a specified head
+- (BOOL)hasSingletonNodeWithHead:(NSString *)shead;
 
 
 #pragma mark Output
