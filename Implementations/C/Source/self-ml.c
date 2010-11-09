@@ -659,9 +659,7 @@ void SFNodeSetNextInList(SFNodeRef node, SFNodeRef nextNode)
 {
 	if (node == SFNullNode)
 		return;
-	
-	printf("Set next: %d\n", nextNode);
-	
+		
 	SFNodeForRef(node)->next = nextNode;
 }
 
