@@ -315,8 +315,13 @@
 }
 - (id)valueForKey:(NSString *)key
 {
-	return [[self extract:key] firstObject];
+	return [[self extract:key] firstObject] ?: [super valueForKey:key];
 }
+- (id)valueForUndefinedKey:(NSString *)key
+{
+	return nil;
+}
+
 - (BOOL)hasSingletonNodeWithHead:(NSString *)shead
 {
 	for (SFONode *child in children)
