@@ -135,8 +135,7 @@
 
 - (id)copyWithZone:(NSZone *)zone
 {
-	return [[[SFONode allocWithZone:zone] initWithNodeRef:SFNodeCopy(node)] autorelease];
-	
+	return [[[[self class] allocWithZone:zone] initWithNodeRef:SFNodeCopy(node)] autorelease];	
 }
 
 
