@@ -312,14 +312,28 @@
 		return [children subarrayWithRange:NSMakeRange(1, [children count] - 1)];
 	return nil;
 }
+- (id)nodeForKey:(NSString *)key
+{
+	return [[self extract:key] firstObject];
+}
 - (id)valueForKey:(NSString *)key
 {
-	return [[self extract:key] firstObject] ?: [super valueForKey:key];
+	SFONode *forKey = [self nodeForKey:key];
+	
+	if (!forKey)
+		return [super valueForKey:key];
+	
+	NSString *firstIfString = [forKey firstIfString];
+	if ([forKey childCount] == 1 && firstIfString)
+		return firstIfString;
+	
+	return forKey;
 }
+/*
 - (id)valueForUndefinedKey:(NSString *)key
 {
 	return nil;
-}
+}*/
 
 - (BOOL)hasSingletonNodeWithHead:(NSString *)shead
 {

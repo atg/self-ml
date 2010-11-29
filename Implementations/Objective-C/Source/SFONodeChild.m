@@ -7,4 +7,13 @@
 	return SFNodeTypeString;
 }
 
+- (id)firstIfString
+{
+	return self;
+}
+- (NSArray *)extractStrings
+{
+	return [NSArray arrayWithObject:self];
+}
+
 @end
