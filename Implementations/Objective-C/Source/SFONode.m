@@ -329,11 +329,11 @@
 	
 	return forKey;
 }
-/*
+
 - (id)valueForUndefinedKey:(NSString *)key
 {
 	return nil;
-}*/
+}
 
 - (BOOL)hasSingletonNodeWithHead:(NSString *)shead
 {
