@@ -203,7 +203,8 @@
 		return;
 	
 	SFONode *b = [children objectAtIndex:index];
-	[b setNodeRef:SFNullNode];
+	if ([b respondsToSelector:@selector(setNodeRef:)])
+		[b setNodeRef:SFNullNode];
 	
 	SFNodeReplaceChildAtIndexWithLast(node, index);
 	
