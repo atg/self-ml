@@ -728,6 +728,95 @@ void SFNodeAddChild(SFNodeRef parent, SFNodeRef node)
 	}
 }
 
+unsigned SFChildNodeCount(SFNodeRef node)
+{
+	SFNodeRef firstChild = SFNodeFirstChild(node);
+	if (firstChild == SFNullNode)
+		return 0;
+	
+	SFNodeRef nextChild = firstChild;
+	unsigned count = 1;
+	while (1)
+	{
+		nextChild = SFNodeNextInList(nextChild);
+		if (nextChild == SFNullNode)
+			return count;
+		
+		count++;
+	}
+}
+
+SFNodeRef SFChildNodeAtIndex(SFNodeRef parent, unsigned index)
+{
+	SFNodeRef firstChild = SFNodeFirstChild(parent);
+	if (firstChild == SFNullNode || index == 0)
+		return firstChild;
+	
+	SFNodeRef nextChild = firstChild;
+	unsigned i = 1;
+	while (1)
+	{
+		nextChild = SFNodeNextInList(nextChild);
+		if (i == index || nextChild == SFNullNode)
+			return nextChild;
+		
+		i++;
+	}
+}
+
+void SFNodeReplaceChildAtIndexWithLast(SFNodeRef parent, unsigned index)
+{
+	// If we have
+	// ... -> a -> b -> c -> ... -> y -> z
+	// Then we want to unlink y -> z, unlink b -> c and relink a -> z
+	
+	unsigned count = SFChildNodeCount(parent);
+	
+	SFNodeRef a = index >= 1 ? SFChildNodeAtIndex(parent, index - 1) : SFNullNode;
+	SFNodeRef b = SFChildNodeAtIndex(parent, index);
+	SFNodeRef y = count >= 2 ? SFChildNodeAtIndex(parent, count - 2) : SFNullNode;
+	SFNodeRef z = count >= 1 ? SFChildNodeAtIndex(parent, count - 1) : SFNullNode;
+	
+	if (z == SFNullNode)
+		return;
+	
+	if (count == 0 || count == 1)
+	{
+		return;
+	}
+	if (count == 2)
+	{
+		if (a != SFNullNode && z != SFNullNode)
+		{
+			//This is a little tricky. We need to replace a with z
+			
+			// relink parent ->> z
+			SFNodeSetFirstChild(parent, z);
+			
+			// unlink a -> z
+			SFNodeSetNextInList(a, SFNullNode);
+			
+			//Free a
+			SFNodeFree(a);
+		}
+		
+		return;
+	}
+	
+	// Unlink y -> z
+	SFNodeSetNextInList(y, SFNullNode);
+	
+	// Unlink b -> c
+	SFNodeSetNextInList(b, SFNullNode);
+	
+	//Relink a -> z
+	SFNodeSetNextInList(a, z);
+	
+	//Free b
+	SFNodeFree(b);
+}
+
+
 size_t SFNodeStringValueLength(SFNodeRef node)
 {
 	if (node == SFNullNode)

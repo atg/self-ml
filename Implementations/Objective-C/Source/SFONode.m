@@ -189,6 +189,36 @@
 	return [[self children] indexOfObject:childNode];
 }
 
+- (void)replaceChildNodeAtIndex:(NSInteger)index with:(id<SFONodeChild>)newChild
+{
+	if (index < 0)
+		return;
+	
+	NSUInteger previousCount = [self childCount];
+	
+	//Add a child node to the end
+	[self addChild:newChild];
+	
+	if (index >= previousCount)
+		return;
+	
+	SFONode *b = [children objectAtIndex:index];
+	[b setNodeRef:SFNullNode];
+	
+	SFNodeReplaceChildAtIndexWithLast(node, index);
+	
+	if ([self childCount] <= 1)
+	{
+		return;
+	}
+	
+	if (newChild != nil)
+	{
+		[children replaceObjectAtIndex:index withObject:[children lastObject]];
+		[children removeLastObject];
+	}
+}
+
 //TODO: IMPLEMENT OTHER PROPERTIES
 
 
@@ -328,6 +358,27 @@
 		return firstIfString;
 	
 	return forKey;
+}
+- (void)setValue:(id)value forKey:(NSString *)key
+{
+	SFONode *forKey = [self nodeForKey:key];
+	
+	if (!forKey)
+		return [super setValue:value forKey:key];
+	
+	NSString *firstIfString = [forKey firstIfString];
+	if ([forKey childCount] == 1 && firstIfString)
+	{
+		[forKey replaceChildNodeAtIndex:0 with:value];
+	}
+	else
+	{
+		NSInteger index = [self indexOfChildNode:forKey];
+		if (index < 0 || index >= NSNotFound)
+			return;
+		
+		[self replaceChildNodeAtIndex:index with:value];
+	}
 }
 
 - (id)valueForUndefinedKey:(NSString *)key
