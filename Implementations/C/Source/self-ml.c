@@ -976,7 +976,13 @@ void SFNodeWriteRepresentationOfStringToFile(SFNodeRef node, FILE* file)
 	const char *strval = SFNodeStringValue(node);
 	if (strval == NULL)
 		return;
-		
+	
+	if (strlen(strval) == 0)
+	{
+		fprintf(file, "[]");
+		return;
+	}
+	
 	//Find out if scannerStrval can be written as a verbatim string or bracketed string
 	_Bool isVerbatimString = true;
 	_Bool isBracketedString = true;

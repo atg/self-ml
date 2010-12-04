@@ -51,6 +51,9 @@
 }
 - (id)initWithString:(NSString *)string
 {
+	if (!string)
+		return nil;
+	
 	SFNodeRef ref = SFNodeCreateFromString([string UTF8String]);
 	return [self initWithNodeRef:ref];
 }
@@ -61,10 +64,14 @@
 		NSUInteger i = 0;
 		for (i = 0; i < [strings count]; i++)
 		{
+			id s = [strings objectAtIndex:i];
+			if (!s)
+				return nil;
+			
 			if (i == 0)
-				self.head = [strings objectAtIndex:i];
+				self.head = s;
 			else
-				[self addChild:[strings objectAtIndex:i]];
+				[self addChild:s];
 		}
 	}
 	return self;
@@ -239,6 +246,8 @@
 		strlcpy(str, [(NSString *)item UTF8String], (len + 1));
 		
 		SFNodeAddString(node, str);
+		
+		[children addObject:item];
 	}
 	else if ([item sfNodeType] == SFNodeTypeList)
 	{
@@ -248,8 +257,9 @@
 		//Remember to set the parent and root node!
 		[(SFONode *)item setParent:self];
 		[(SFONode *)item setRootNode:[self rootNode]];
+		
+		[children addObject:item];
 	}
-	[children addObject:item];
 }
 
 /*
@@ -551,6 +561,12 @@ void SFONodeWriteRepresentationOfString(SFNodeRef node, NSMutableString *mstr)
     const char *strval = SFNodeStringValue(node);
     if (strval == NULL)
         return;
+	
+	if (strlen(strval) == 0)
+	{
+		[mstr appendString:@"[]"];
+		return;
+	}
 	
     //Find out if scannerStrval can be written as a verbatim string or bracketed string
     _Bool isVerbatimString = true;
