@@ -146,7 +146,7 @@ SFNodeRef SFNodeCopy(SFNodeRef nodeRef)
 	{
 		const char *strval = SFNodeStringValue(nodeRef);
 		size_t strvalLength = strlen(strval);
-		const char *newStrval = malloc((strvalLength + 1) * sizeof(char));
+		char *newStrval = malloc((strvalLength + 1) * sizeof(char));
 		strlcpy(newStrval, strval, strvalLength + 1);
 		SFNodeSetStringValue(newNode, newStrval);
 	}
@@ -155,7 +155,7 @@ SFNodeRef SFNodeCopy(SFNodeRef nodeRef)
 	{
 		const char *strval = SFNodeHead(nodeRef);
 		size_t strvalLength = strlen(strval);
-		const char *newStrval = malloc((strvalLength + 1) * sizeof(char));
+		char *newStrval = malloc((strvalLength + 1) * sizeof(char));
 		strlcpy(newStrval, strval, strvalLength + 1);
 		SFNodeSetHead(newNode, newStrval);
 	}
@@ -750,7 +750,9 @@ SFNodeRef SFChildNodeAtIndex(SFNodeRef parent, unsigned index)
 {
 	SFNodeRef firstChild = SFNodeFirstChild(parent);
 	if (firstChild == SFNullNode || index == 0)
-		return firstChild;
+    {
+        return firstChild;
+    }
 	
 	SFNodeRef nextChild = firstChild;
 	unsigned i = 1;
@@ -758,7 +760,9 @@ SFNodeRef SFChildNodeAtIndex(SFNodeRef parent, unsigned index)
 	{
 		nextChild = SFNodeNextInList(nextChild);
 		if (i == index || nextChild == SFNullNode)
-			return nextChild;
+        {
+            return nextChild;
+        }
 		
 		i++;
 	}
@@ -786,7 +790,8 @@ void SFNodeReplaceChildAtIndexWithLast(SFNodeRef parent, unsigned index)
 	}
 	if (count == 2)
 	{
-		if (a != SFNullNode && z != SFNullNode)
+        printf("count == 2\n");
+		if (b != SFNullNode && z != SFNullNode)
 		{
 			//This is a little tricky. We need to replace a with z
 			
@@ -794,10 +799,10 @@ void SFNodeReplaceChildAtIndexWithLast(SFNodeRef parent, unsigned index)
 			SFNodeSetFirstChild(parent, z);
 			
 			// unlink a -> z
-			SFNodeSetNextInList(a, SFNullNode);
+			SFNodeSetNextInList(b, SFNullNode);
 			
 			//Free a
-			SFNodeFree(a);
+			SFNodeFree(b);
 		}
 		
 		return;

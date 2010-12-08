@@ -213,8 +213,17 @@
 	if ([b respondsToSelector:@selector(setNodeRef:)])
 		[b setNodeRef:SFNullNode];
 	
+    printf("BEFORE: ");
+    SFNodePrintRepresentation(node);
+    printf("\n\n");
+    
 	SFNodeReplaceChildAtIndexWithLast(node, index);
 	
+    printf("AFTER: ");
+    SFNodePrintRepresentation(node);
+    printf("\n\n");
+    
+    
 	if ([self childCount] <= 1)
 	{
 		return;
@@ -222,6 +231,7 @@
 	
 	if (newChild != nil)
 	{
+        printf("REPLACING\n");
 		[children replaceObjectAtIndex:index withObject:[children lastObject]];
 		[children removeLastObject];
 	}
