@@ -146,7 +146,7 @@ SFNodeRef SFNodeCopy(SFNodeRef nodeRef)
 	{
 		const char *strval = SFNodeStringValue(nodeRef);
 		size_t strvalLength = strlen(strval);
-		const char *newStrval = malloc((strvalLength + 1) * sizeof(char));
+		char *newStrval = malloc((strvalLength + 1) * sizeof(char));
 		strlcpy(newStrval, strval, strvalLength + 1);
 		SFNodeSetStringValue(newNode, newStrval);
 	}
@@ -155,7 +155,7 @@ SFNodeRef SFNodeCopy(SFNodeRef nodeRef)
 	{
 		const char *strval = SFNodeHead(nodeRef);
 		size_t strvalLength = strlen(strval);
-		const char *newStrval = malloc((strvalLength + 1) * sizeof(char));
+		char *newStrval = malloc((strvalLength + 1) * sizeof(char));
 		strlcpy(newStrval, strval, strvalLength + 1);
 		SFNodeSetHead(newNode, newStrval);
 	}
@@ -659,9 +659,7 @@ void SFNodeSetNextInList(SFNodeRef node, SFNodeRef nextNode)
 {
 	if (node == SFNullNode)
 		return;
-	
-	printf("Set next: %d\n", nextNode);
-	
+		
 	SFNodeForRef(node)->next = nextNode;
 }
 
@@ -729,6 +727,100 @@ void SFNodeAddChild(SFNodeRef parent, SFNodeRef node)
         currentNode = SFNodeNextInList(currentNode);
 	}
 }
+
+unsigned SFChildNodeCount(SFNodeRef node)
+{
+	SFNodeRef firstChild = SFNodeFirstChild(node);
+	if (firstChild == SFNullNode)
+		return 0;
+	
+	SFNodeRef nextChild = firstChild;
+	unsigned count = 1;
+	while (1)
+	{
+		nextChild = SFNodeNextInList(nextChild);
+		if (nextChild == SFNullNode)
+			return count;
+		
+		count++;
+	}
+}
+
+SFNodeRef SFChildNodeAtIndex(SFNodeRef parent, unsigned index)
+{
+	SFNodeRef firstChild = SFNodeFirstChild(parent);
+	if (firstChild == SFNullNode || index == 0)
+    {
+        return firstChild;
+    }
+	
+	SFNodeRef nextChild = firstChild;
+	unsigned i = 1;
+	while (1)
+	{
+		nextChild = SFNodeNextInList(nextChild);
+		if (i == index || nextChild == SFNullNode)
+        {
+            return nextChild;
+        }
+		
+		i++;
+	}
+}
+
+void SFNodeReplaceChildAtIndexWithLast(SFNodeRef parent, unsigned index)
+{
+	// If we have
+	// ... -> a -> b -> c -> ... -> y -> z
+	// Then we want to unlink y -> z, unlink b -> c and relink a -> z
+	
+	unsigned count = SFChildNodeCount(parent);
+	
+	SFNodeRef a = index >= 1 ? SFChildNodeAtIndex(parent, index - 1) : SFNullNode;
+	SFNodeRef b = SFChildNodeAtIndex(parent, index);
+	SFNodeRef y = count >= 2 ? SFChildNodeAtIndex(parent, count - 2) : SFNullNode;
+	SFNodeRef z = count >= 1 ? SFChildNodeAtIndex(parent, count - 1) : SFNullNode;
+	
+	if (z == SFNullNode)
+		return;
+	
+	if (count == 0 || count == 1)
+	{
+		return;
+	}
+	if (count == 2)
+	{
+        printf("count == 2\n");
+		if (b != SFNullNode && z != SFNullNode)
+		{
+			//This is a little tricky. We need to replace a with z
+			
+			// relink parent ->> z
+			SFNodeSetFirstChild(parent, z);
+			
+			// unlink a -> z
+			SFNodeSetNextInList(b, SFNullNode);
+			
+			//Free a
+			SFNodeFree(b);
+		}
+		
+		return;
+	}
+	
+	// Unlink y -> z
+	SFNodeSetNextInList(y, SFNullNode);
+	
+	// Unlink b -> c
+	SFNodeSetNextInList(b, SFNullNode);
+	
+	//Relink a -> z
+	SFNodeSetNextInList(a, z);
+	
+	//Free b
+	SFNodeFree(b);
+}
+
 
 size_t SFNodeStringValueLength(SFNodeRef node)
 {
@@ -889,7 +981,13 @@ void SFNodeWriteRepresentationOfStringToFile(SFNodeRef node, FILE* file)
 	const char *strval = SFNodeStringValue(node);
 	if (strval == NULL)
 		return;
-		
+	
+	if (strlen(strval) == 0)
+	{
+		fprintf(file, "[]");
+		return;
+	}
+	
 	//Find out if scannerStrval can be written as a verbatim string or bracketed string
 	_Bool isVerbatimString = true;
 	_Bool isBracketedString = true;

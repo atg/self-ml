@@ -80,8 +80,17 @@ void SFNodeSetStringValue(SFNodeRef node, const char *str);
 //`stringDestination` must be large enough to hold `selfml_node_string_length(node)` characters.
 _Bool SFNodeCopyStringValueTo(SFNodeRef node, const char* stringDestination);
 
+unsigned SFChildNodeCount(SFNodeRef node);
+
+SFNodeRef SFChildNodeAtIndex(SFNodeRef parent, unsigned index);
+
+
+#pragma mark Mutation
+
 void SFNodeAddString(SFNodeRef parent, const char* str);
 void SFNodeAddChild(SFNodeRef parent, SFNodeRef node);
+
+void SFNodeReplaceChildAtIndexWithLast(SFNodeRef parent, unsigned index);
 
 
 #pragma mark Representations

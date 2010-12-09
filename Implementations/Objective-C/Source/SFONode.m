@@ -51,6 +51,9 @@
 }
 - (id)initWithString:(NSString *)string
 {
+	if (!string)
+		return nil;
+	
 	SFNodeRef ref = SFNodeCreateFromString([string UTF8String]);
 	return [self initWithNodeRef:ref];
 }
@@ -61,10 +64,14 @@
 		NSUInteger i = 0;
 		for (i = 0; i < [strings count]; i++)
 		{
+			id s = [strings objectAtIndex:i];
+			if (!s)
+				return nil;
+			
 			if (i == 0)
-				self.head = [strings objectAtIndex:i];
+				self.head = s;
 			else
-				[self addChild:[strings objectAtIndex:i]];
+				[self addChild:s];
 		}
 	}
 	return self;
@@ -135,8 +142,7 @@
 
 - (id)copyWithZone:(NSZone *)zone
 {
-	return [[[SFONode allocWithZone:zone] initWithNodeRef:SFNodeCopy(node)] autorelease];
-	
+	return [[[[self class] allocWithZone:zone] initWithNodeRef:SFNodeCopy(node)] autorelease];	
 }
 
 
@@ -190,6 +196,37 @@
 	return [[self children] indexOfObject:childNode];
 }
 
+- (void)replaceChildNodeAtIndex:(NSInteger)index with:(id<SFONodeChild>)newChild
+{
+	if (index < 0)
+		return;
+	
+	NSUInteger previousCount = [self childCount];
+	
+	//Add a child node to the end
+	[self addChild:newChild];
+	
+	if (index >= previousCount)
+		return;
+	
+	SFONode *b = [children objectAtIndex:index];
+	if ([b respondsToSelector:@selector(setNodeRef:)])
+		[b setNodeRef:SFNullNode];
+	
+	SFNodeReplaceChildAtIndexWithLast(node, index);
+    
+	if ([self childCount] <= 1)
+	{
+		return;
+	}
+	
+	if (newChild != nil)
+	{
+		[children replaceObjectAtIndex:index withObject:[children lastObject]];
+		[children removeLastObject];
+	}
+}
+
 //TODO: IMPLEMENT OTHER PROPERTIES
 
 
@@ -209,6 +246,8 @@
 		strlcpy(str, [(NSString *)item UTF8String], (len + 1));
 		
 		SFNodeAddString(node, str);
+		
+		[children addObject:item];
 	}
 	else if ([item sfNodeType] == SFNodeTypeList)
 	{
@@ -218,8 +257,9 @@
 		//Remember to set the parent and root node!
 		[(SFONode *)item setParent:self];
 		[(SFONode *)item setRootNode:[self rootNode]];
+		
+		[children addObject:item];
 	}
-	[children addObject:item];
 }
 
 /*
@@ -271,6 +311,19 @@
 	return result;
 }
 
+//Extract singleton nodes (like) (this)
+- (NSArray *)extractSingletonNodes
+{
+	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
+	for(SFONode *child in children) {
+		if([child sfNodeType] == SFNodeTypeList && [[child head] length] > 0 && [child childCount] == 0) {
+			[result addObject:child];
+		}
+	}
+	
+	return result;
+}
+
 - (NSArray *)extractLists
 {
 	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
@@ -300,9 +353,62 @@
 		return [children subarrayWithRange:NSMakeRange(1, [children count] - 1)];
 	return nil;
 }
-- (void)valueForKey:(NSString *)key
+- (id)nodeForKey:(NSString *)key
 {
 	return [[self extract:key] firstObject];
+}
+- (id)valueForKey:(NSString *)key
+{
+	SFONode *forKey = [self nodeForKey:key];
+	
+	if (!forKey)
+		return [super valueForKey:key];
+	
+	NSString *firstIfString = [forKey firstIfString];
+	if ([forKey childCount] == 1 && firstIfString)
+		return firstIfString;
+	
+	return forKey;
+}
+- (void)setValue:(id)value forKey:(NSString *)key
+{
+	SFONode *forKey = [self nodeForKey:key];
+	
+	if (!forKey)
+		return [super setValue:value forKey:key];
+	
+	NSString *firstIfString = [forKey firstIfString];
+	if ([forKey childCount] == 1 && firstIfString)
+	{
+		[forKey replaceChildNodeAtIndex:0 with:value];
+	}
+	else
+	{
+		NSInteger index = [self indexOfChildNode:forKey];
+		if (index < 0 || index >= NSNotFound)
+			return;
+		
+		[self replaceChildNodeAtIndex:index with:value];
+	}
+}
+
+- (id)valueForUndefinedKey:(NSString *)key
+{
+	return nil;
+}
+
+- (BOOL)hasSingletonNodeWithHead:(NSString *)shead
+{
+	for (SFONode *child in children)
+	{
+		if ([child sfNodeType] == SFNodeTypeList && [child childCount] == 0)
+		{
+			if ([[child head] isEqual:shead])
+				return YES;
+		}
+	}
+	
+	return NO;
 }
 
 
@@ -455,6 +561,12 @@ void SFONodeWriteRepresentationOfString(SFNodeRef node, NSMutableString *mstr)
     const char *strval = SFNodeStringValue(node);
     if (strval == NULL)
         return;
+	
+	if (strlen(strval) == 0)
+	{
+		[mstr appendString:@"[]"];
+		return;
+	}
 	
     //Find out if scannerStrval can be written as a verbatim string or bracketed string
     _Bool isVerbatimString = true;
