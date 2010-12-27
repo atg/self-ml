@@ -9,7 +9,7 @@
  *  In case this is not legally possible,
  *  I grant any entity the right to use this work for any purpose, without any conditions, unless such conditions are required by law.
  *  
- *  If you have an questions about the above declaration, please email anythingfileability.net
+ *  If you have an questions about the above declaration, please email anything@fileability.net
  */
 
 #include "self-ml.h"
@@ -770,6 +770,126 @@ SFNodeRef SFChildNodeAtIndex(SFNodeRef parent, unsigned index)
 
 void SFNodeReplaceChildAtIndexWithLast(SFNodeRef parent, unsigned index)
 {
+	unsigned count = SFChildNodeCount(parent);
+	
+	//pre_a is the node before a, or NULL if it doesn't exist
+	SFNodeRef pre_a = index >= 1 ? SFChildNodeAtIndex(parent, index - 1) : SFNullNode;
+	
+	//a is the node we're replacing
+	SFNodeRef a = SFChildNodeAtIndex(parent, index);
+	
+	//pre_z is the node before z, or NULL if it doesn't exist
+	SFNodeRef pre_z = count >= 2 ? SFChildNodeAtIndex(parent, count - 2) : SFNullNode;
+	
+	//z is the node we're moving
+	SFNodeRef z = count >= 1 ? SFChildNodeAtIndex(parent, count - 1) : SFNullNode;
+	
+	//printf("we have | count = %d | index = %d | a = %d | z = %d | pre_a = %d | pre_z = %d\n", count, index, a, z, pre_a, pre_z);
+	//SFNodePrintRepresentation(parent);
+	if (count == 0 || count == 1 || index + 1 >= count || z == SFNullNode || a == SFNullNode)
+	{
+		//printf("bailing out\n", count, index, a, z);
+		return;
+	}
+	
+	if (pre_a == SFNullNode)
+	{
+		// parent ->> a -> ...
+		
+		if (pre_z == parent || pre_z == pre_a || pre_z == a || pre_z == z || pre_z == SFNullNode)
+		{
+			// We have
+			//   parent ->> a -> z
+			// We want
+			//   parent ->> z
+			
+			// link parent ->> z
+			SFNodeSetFirstChild(parent, z);
+			
+			// unlink a -> z
+			SFNodeSetNextInList(a, SFNullNode);
+			
+			// free a
+			SFNodeFree(a);
+		}
+		else
+		{
+			// We have
+			//   parent ->> a -> ... -> pre_z -> z
+			// We want
+			//   parent ->> z -> ... -> pre_z
+			
+			// get a -> post_a
+			SFNodeRef post_a = SFNodeNextInList(a);
+			
+			// unlink a -> post_a
+			SFNodeSetNextInList(a, SFNullNode);
+			
+			// free a
+			SFNodeFree(a);
+			
+			// link parent ->> z
+			SFNodeSetFirstChild(parent, z);
+			
+			// link z -> post_a
+			SFNodeSetNextInList(z, post_a);			
+			
+			// unlink pre_z -> z
+			SFNodeSetNextInList(pre_z, SFNullNode);
+		}
+	}
+	else
+	{
+		// parent ->> pre_a -> a -> ...
+		
+		if (pre_z == parent || pre_z == pre_a || pre_z == a || pre_z == z || pre_z == SFNullNode)
+		{
+			// We have
+			//   parent ->> pre_a -> a -> z
+			// We want
+			//   parent ->> pre_a -> z
+			
+			// link pre_a -> z
+			SFNodeSetNextInList(pre_a, z);
+			
+			// unlink a
+			SFNodeSetNextInList(a, SFNullNode);
+			
+			// free a
+			SFNodeFree(a);
+		}
+		else
+		{
+			// We have
+			//   parent ->> pre_a -> a -> ... -> pre_z -> z
+			// We want
+			//   parent ->> pre_a -> z -> ... -> pre_z
+			
+			// get a -> post_a
+			SFNodeRef post_a = SFNodeNextInList(a);
+			
+			// unlink a -> post_a
+			SFNodeSetNextInList(a, SFNullNode);
+			
+			// free a
+			SFNodeFree(a);
+			
+			// link pre_a -> z
+			SFNodeSetNextInList(pre_a, z);
+			
+			// link z -> post_a
+			SFNodeSetNextInList(z, post_a);			
+			
+			// unlink pre_z -> z
+			SFNodeSetNextInList(pre_z, SFNullNode);
+		}
+	}
+	//SFNodePrintRepresentation(parent);
+	//printf("end\n");
+}
+
+void SFNodeReplaceChildAtIndexWithLast_old(SFNodeRef parent, unsigned index)
+{
 	// If we have
 	// ... -> a -> b -> c -> ... -> y -> z
 	// Then we want to unlink y -> z, unlink b -> c and relink a -> z
@@ -781,13 +901,21 @@ void SFNodeReplaceChildAtIndexWithLast(SFNodeRef parent, unsigned index)
 	SFNodeRef y = count >= 2 ? SFChildNodeAtIndex(parent, count - 2) : SFNullNode;
 	SFNodeRef z = count >= 1 ? SFChildNodeAtIndex(parent, count - 1) : SFNullNode;
 	
+	SFNodePrintRepresentation(parent);
+	
 	if (z == SFNullNode)
+	{
+		printf("\t is null - ending\n");
 		return;
+	}
 	
 	if (count == 0 || count == 1)
 	{
+		printf("\t count is %d - ending\n", count);
 		return;
 	}
+
+	printf("\t a %d -- b %d -- y %d -- z %d -- parent %d -- index %d \n", a, b, y, z, parent, index);
 	if (count == 2)
 	{
         printf("count == 2\n");
@@ -808,6 +936,13 @@ void SFNodeReplaceChildAtIndexWithLast(SFNodeRef parent, unsigned index)
 		return;
 	}
 	
+	if (index == 0 && a == SFNullNode)
+	{
+		// We have
+		// parent ->> b -> ... -> y -> z
+		return;
+	}
+	
 	// Unlink y -> z
 	SFNodeSetNextInList(y, SFNullNode);
 	
@@ -819,6 +954,8 @@ void SFNodeReplaceChildAtIndexWithLast(SFNodeRef parent, unsigned index)
 	
 	//Free b
 	SFNodeFree(b);
+	SFNodePrintRepresentation(parent);
+	printf("\t end\n");
 }
 
 
