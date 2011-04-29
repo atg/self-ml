@@ -150,7 +150,9 @@
 
 - (BOOL)isEqual:(id<SFONodeChild>)otherNode
 {
-	return [[self selfmlRepresentation] isEqual:[otherNode selfmlRepresentation]];
+    if ([otherNode respondsToSelector:@selector(selfmlRepresentation)])
+        return [[self selfmlRepresentation] isEqual:[otherNode selfmlRepresentation]];
+    return NO;
 }
 
 
