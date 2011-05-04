@@ -12,6 +12,10 @@
 	SFONode *parent;
 	SFNodeRef node;
 	NSMutableArray *children;
+	
+	BOOL shouldCallSuperInit;
+	BOOL isSuspended;
+	NSString *filePath;
 }
 
 #pragma mark Creation
@@ -26,7 +30,8 @@
 - (id)initWithString:(NSString *)string;
 - (id)initWithList:(NSArray *)strings; // [head, arg1, arg2, arg3, ...]
 - (id)initWithData:(NSData *)data;
-- (id)initWithNodeRef:(SFNodeRef)ref; //Designated Initializer
+- (id)initWithNodeRef:(SFNodeRef)ref;
+- (id)initWithNodeRef:(SFNodeRef)ref isLazy:(BOOL)isLazy; //Designated Initializer
 
 
 #pragma mark Equality, etc
