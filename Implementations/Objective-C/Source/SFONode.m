@@ -1,5 +1,4 @@
 #import "SFONode.h"
-#import "CHFileCache.h"
 
 //External users of this library must uncomment this line
 //#define NO_CHFILECACHE
