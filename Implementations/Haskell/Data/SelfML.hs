@@ -66,9 +66,9 @@ smlVerbatim     = many1 $ satisfyNone [flip elem "[](){}#`", isSpace]
 smlBracketed    = brackets $ concat <$> many (try smlBracketed <|> many1 (noneOf "[]"))
 smlBacktick     = backticks $ many1 (try (string "``") *> pure '`' <|> noneOf "`")
 smlLineComment  = char '#' *> many (noneOf "\n") *> (char '\n' *> pure () <|> eof)
-smlComment      = braceHash $ many1 (notFollowedBy (string "#}") *>
-                                     (try smlComment <|>
-                                      anyChar *> pure ())) *> pure ()
+smlComment      = braceHash $ many (notFollowedBy (string "#}") *>
+                                    (try smlComment <|>
+                                     anyChar *> pure ())) *> pure ()
 
 parens    p = char   '('  *> p <* char   ')'
 brackets  p = char   '['  *> p <* char   ']'
