@@ -64,7 +64,7 @@ smlTree         = Terminal <$> spaces smlString <|>
 smlString       = smlBacktick <|> smlBracketed <|> smlVerbatim <?> "a string"
 smlVerbatim     = many1 $ satisfyNone [flip elem "[](){}#`", isSpace]
 smlBracketed    = brackets $ concat <$> many (("["++) . (++"]") <$> try smlBracketed <|> many1 (noneOf "[]"))
-smlBacktick     = backticks $ many1 (try (string "``") *> pure '`' <|> noneOf "`")
+smlBacktick     = backticks $ many (try (string "``" *> pure '`') <|> noneOf "`")
 smlLineComment  = char '#' *> many (noneOf "\n") *> (char '\n' *> pure () <|> eof)
 smlComment      = braceHash $ many (notFollowedBy (string "#}") *>
                                     (try smlComment <|>
