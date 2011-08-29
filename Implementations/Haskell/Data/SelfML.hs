@@ -9,6 +9,7 @@ module Data.SelfML (
   isNode,
   readSML,
   showSML,
+  showSMLString,
   prettyPrintSML,
   SelfPath(..),
   Query(..),
@@ -23,7 +24,7 @@ import Control.Applicative
 import Data.Char
 import Data.List
 import Data.Monoid
-import Text.Parsec hiding (many, (<|>), spaces)
+import Text.Parsec hiding (many, (<|>), spaces, optional)
 
 -- | Like Data.Tree.Tree, but provides a singleton case. In essence, a conc list.
 data Tree a = Node a (Forest a) | Terminal a
@@ -33,7 +34,7 @@ type Forest a = [Tree a]
 
 -- | Reads SelfML out of a string.
 readSML :: String -> Either ParseError (Forest String)
-readSML = parse (smlForest <* eof) ""
+readSML = parse (smlForest smlString <* eof) ""
 
 -- | Serializes into a SelfML string.
 showSML :: Forest String -> String
@@ -74,6 +75,8 @@ data Query = Named String
            | Equal (Tree String)
            | Child
            | At    Integer
+           | AtEq  Integer (Tree String)
+           | Range Integer Integer
            | Not   Query
            deriving (Eq, Read, Show)
 
@@ -81,16 +84,18 @@ data SelfPath = Recursive  Query    SelfPath
               | Direct     Query    SelfPath
               | Lookahead  SelfPath SelfPath
               | NLookahead SelfPath SelfPath
+              | MEither    SelfPath SelfPath
               | Anything
               deriving (Eq, Read, Show)
 
 instance Monoid SelfPath where
   mempty                      = Anything
-  Recursive  q sp `mappend` b = Recursive  q (sp `mappend` b)
-  Direct     q sp `mappend` b = Direct     q (sp `mappend` b)
-  Lookahead  q sp `mappend` b = Lookahead  q (sp `mappend` b)
-  NLookahead q sp `mappend` b = NLookahead q (sp `mappend` b)
-  Anything        `mappend` b = b
+  Recursive  q  sp `mappend` b = Recursive   q               (sp `mappend` b)
+  Direct     q  sp `mappend` b = Direct      q               (sp `mappend` b)
+  Lookahead  sa sb `mappend` b = Lookahead   sa              (sb `mappend` b)
+  NLookahead sa sb `mappend` b = NLookahead  sa              (sb `mappend` b)
+  MEither    sa sb `mappend` b = MEither    (sa `mappend` b) (sb `mappend` b)
+  Anything         `mappend` b = b
 
 (<//>) :: Forest String                     -- ^ Forest to match against
        -> String                            -- ^ SelfPath to compile
@@ -123,6 +128,7 @@ filterSelfPath (Lookahead  ie sp) t = if null (filterSelfPath ie t)
 filterSelfPath (NLookahead ie sp) t = if null (filterSelfPath ie t)
                                          then filterSelfPath sp t
                                          else []
+filterSelfPath (MEither    sa sb) t = filterSelfPath sa t ++ filterSelfPath sb t
 filterSelfPath Anything           t = [t]
 
 mapSelfPath :: SelfPath -> (Tree String -> Tree String) -> Tree String -> Tree String
@@ -134,6 +140,7 @@ mapSelfPath (Lookahead  ie sp) f t = if null (filterSelfPath ie t)
 mapSelfPath (NLookahead ie sp) f t = if null (filterSelfPath ie t)
                                         then mapSelfPath sp f t
                                         else t
+mapSelfPath (MEither    sa sb) f t = mapSelfPath sb f (mapSelfPath sa f t)
 mapSelfPath Anything           f t = f t
 
 parseSelfPath :: String -> Either ParseError SelfPath
@@ -141,12 +148,12 @@ parseSelfPath = parse (spSpaces spNode <* eof) ""
 
 --- parser ---
 
-smlForest :: Parsec [Char] () (Forest String)
-smlTree   :: Parsec [Char] () (Tree   String)
+smlForest :: Parsec [Char] () a -> Parsec [Char] () (Forest a)
+smlTree   :: Parsec [Char] () a -> Parsec [Char] () (Tree   a)
 
-smlForest       = spaces (smlTree `sepEndBy` whitespace)
-smlTree         = Terminal <$> spaces smlString <|>
-                  parens (Node <$> spaces smlString <*> smlForest)
+smlForest     v = spaces (smlTree v `sepEndBy` whitespace)
+smlTree       v = Terminal <$> v <|>
+                  parens (Node <$> v <*> smlForest v)
 smlString       = smlBacktick <|> smlBracketed <|> smlVerbatim <?> "a string"
 smlVerbatim     = many1 $ satisfyNone [flip elem "[](){}#`", isSpace]
 smlBracketed    = brackets $ concat <$> many (("["++) . (++"]") <$> try smlBracketed <|> many1 (noneOf "[]"))
@@ -170,27 +177,37 @@ satisfyNone fs = satisfy $ \ c -> not $ any ($ c) fs
 
 spNode :: Parsec [Char] () SelfPath
 
-spNode = try (lah       <$> many (char '!') <*> parens (spNode) <*> sn)
-     <|>      Direct    <$> (char '>' *> spWhitespace *> spQuery) <*> sn
-     <|>      Recursive <$> spQuery                             <*> sn
-  where sn = try (spWhitespace *> spNode) <|> pure Anything
+spNode = try (MEither <$> spNodeI <*> (spSpaces (char ',') *> spNode)) <|> spNodeI
+
+spNodeI = try (lah       <$> many (char '!') <*> parens (spNode)   <*> sn)
+      <|>      Direct    <$> (char '>' *> spWhitespace *> spQuery) <*> sn
+      <|>                     char '$' *> spWhitespace *> spNode
+      <|>      Recursive <$> spQuery                               <*> sn
+  where sn = try (spWhitespace *> spNodeI) <|> pure Anything
         lah excl ie sp =
           (if even (length excl) then Lookahead else NLookahead) ie sp
 
 spQuery = spNot
       <|> spEqual
-      <|> spAt
+      <|> try spAtEq
+      <|> spAtRange
       <|> spChild
       <|> spNamed
 
-spNot   = Not   <$> (char '!' *> spQuery)
-spEqual = Equal <$> (char '=' *> smlTree)
-spAt    = At    <$> (char '#' *> (read <$> many1 (oneOf ['0'..'9'])))
-spChild = char '*' *> pure Child
-spNamed = Named <$> smlString
+spNot        = Not   <$> (char '!' *> spQuery)
+spEqual      = Equal <$> (char '=' *> smlTree spString)
+spAtEq       = AtEq  <$> (char '#' *> spNum) <*> (char '=' *> smlTree spString)
+spAtRange    = fd    <$> (char '#' *> spNum) <*> optional (char '-' *> spNum)
+  where fd n = maybe (At n) (Range n)
+spChild      = char '*' *> pure Child
+spNamed      = Named <$> spString
 
 spWhitespace = many (smlComment <|> satisfy isSpace *> pure ())
 spSpaces p   = spWhitespace *> p <* spWhitespace
+
+spNum      = read <$> many1 (oneOf ['0'..'9'])
+spString   = smlBacktick <|> smlBracketed <|> spVerbatim <?> "a SelfML string"
+spVerbatim = many1 $ satisfyNone [flip elem "[](){}#`,=!*<>$", isSpace]
 
 --- various utility functions for trees ---
 
@@ -222,30 +239,28 @@ withValue f (Terminal x) = Terminal (f x)
 
 -- | Recursively matches a query through a tree.
 deepQuery :: Query -> Tree String -> Forest String
-deepQuery q n@(Node _ ts) = shallowQuery q n ++ (ts >>= deepQuery q)
-deepQuery q n             = shallowQuery q n
+deepQuery q n = shallowQuery q n ++ (children n >>= deepQuery q)
 
 -- | Matches a query on the top level of a tree.
 shallowQuery :: Query -> Tree String -> Forest String
-shallowQuery      (Named s)  (Node _ ts)  = filter f ts
+shallowQuery      (Named s)    (Node _ ts)  = filter f ts
   where f (Node x _) = x == s
         f _          = False
-shallowQuery (Not (Named s)) (Node _ ts)  = filter f ts
+shallowQuery (Not (Named s))   (Node _ ts)  = filter f ts
   where f (Node x _) = x /= s
         f _          = False
-shallowQuery      (Equal t)  (Node _ ts)  = filter (== t)    ts
-shallowQuery (Not (Equal t)) (Node _ ts)  = filter (/= t)    ts
-shallowQuery      (At    0)  (Terminal x) = [Terminal x]
-shallowQuery      (At    0)  (Node x _)   = [Terminal x]
-shallowQuery (Not (At    0)) (Node _ ts)  = ts
-shallowQuery      (At    i)  (Node _ ts)
-  | genericLength ts >= i                 = [ts `genericIndex` (i-1)]
-shallowQuery (Not (At    i)) (Node _ ts)
-  | genericLength ts >= i                 = genericTake (i - 1) ts ++ genericDrop i ts
-shallowQuery      Child      (Node _ ts)  = ts
-shallowQuery (Not Child)     _            = []
-shallowQuery (Not (Not q))   t            = shallowQuery q t
-shallowQuery _         _                  = []
+shallowQuery      (Equal t)    (Node _ ts)  = filter (== t)    ts
+shallowQuery (Not (Equal t))   (Node _ ts)  = filter (/= t)    ts
+shallowQuery      (At    i)    n            = filterWithIndex (const . (== i))                (nodeToList n)
+shallowQuery (Not (At    i))   n            = filterWithIndex (const . (/= i))                (nodeToList n)
+shallowQuery      (AtEq  i e)  n            = filterWithIndex (\ i' e' -> i' == i && e' == e) (nodeToList n)
+shallowQuery (Not (AtEq  i e)) n            = filterWithIndex (\ i' e' -> i' == i && e' /= e) (nodeToList n)
+shallowQuery      (Range a b)  n            = filterWithIndex (const . andF [(>= a),(<= b)])  (nodeToList n)
+shallowQuery (Not (Range a b)) n            = filterWithIndex (const . andF [(<  a),(>  b)])  (nodeToList n)
+shallowQuery      Child        (Node _ ts)  = ts
+shallowQuery (Not Child)       _            = []
+shallowQuery (Not (Not q))     t            = shallowQuery q t
+shallowQuery _         _                    = []
 
 -- | Recursively maps a query through a tree.
 deepMapQuery :: Query -> (Tree String -> Tree String) -> Tree String -> Tree String
@@ -253,24 +268,23 @@ deepMapQuery q f = withChildren (map $ deepMapQuery q f) . shallowMapQuery q f
 
 -- | Maps a query through the top level of a tree.
 shallowMapQuery :: Query -> (Tree String -> Tree String) -> Tree String -> Tree String
-shallowMapQuery      (Named s)  f t = withChildren (map fn) t
-  where fn n@(Node x _) | x == s    = f n
-        fn n                        = n
-shallowMapQuery (Not (Named s)) f t = withChildren (map fn) t
-  where fn n@(Node x _) | x /= s    = f n
-        fn n                        = n
-shallowMapQuery      (Equal e)  f t = withChildren (map $ applyIf (== e)    f) t
-shallowMapQuery (Not (Equal e)) f t = withChildren (map $ applyIf (/= e)    f) t
-shallowMapQuery      (At    0)  f t = withValue (value.f.Terminal) t
-shallowMapQuery (Not (At    0)) f t = withChildren (map f) t
-shallowMapQuery      (At    i)  f t = withChildren (\ xs -> snd $ foldl fn (genericLength xs - 1, []) xs) t
-  where fn (c, l) a | c == i        = (c-1, f a : l)
-                    | otherwise     = (c-1,   a : l)
-shallowMapQuery (Not (At    i)) f t = withChildren (\ xs -> snd $ foldl fn (genericLength xs - 1, []) xs) t
-  where fn (c, l) a | c /= i        = (c-1, f a : l)
-                    | otherwise     = (c-1,   a : l)
-shallowMapQuery      Child      f t = withChildren (map f) t
-shallowMapQuery (Not Child)     f t = t
+shallowMapQuery      (Named s)    f t = withChildren (mapIf (andF [isNode, (== s).value]) f) t
+shallowMapQuery (Not (Named s))   f t = withChildren (mapIf (andF [isNode, (/= s).value]) f) t
+shallowMapQuery      (Equal e)    f t = withChildren (mapIf (== e) f) t
+shallowMapQuery (Not (Equal e))   f t = withChildren (mapIf (/= e) f) t
+shallowMapQuery      (At    0)    f t = withValue    (value.f.Terminal) t
+shallowMapQuery (Not (At    0))   f t = withChildren (map f) t
+shallowMapQuery      (At    i)    f t = withChildren (mapIf' (== i-1) f) t
+shallowMapQuery (Not (At    i))   f t = withChildren (mapIf' (/= i-1) f) t
+shallowMapQuery      (AtEq  0 e)  f t = withValue    (value . applyIf (== e) f . Terminal) t
+shallowMapQuery (Not (AtEq  0 e)) f t = withValue    (value . applyIf (/= e) f . Terminal) t
+shallowMapQuery      (AtEq  i e)  f t = withChildren (mapIf' (== i-1) (applyIf (== e) f)) t
+shallowMapQuery (Not (AtEq  i e)) f t = withChildren (mapIf' (== i-1) (applyIf (/= e) f)) t
+shallowMapQuery      (Range a b)  f t = withChildren (mapIf' (andF [(>= a),(<= b)]) f . (Terminal (value t) :)) t
+shallowMapQuery (Not (Range a b)) f t = withChildren (mapIf' (orF  [(<  a),(>  b)]) f . (Terminal (value t) :)) t
+shallowMapQuery      Child        f t = withChildren (map f) t
+shallowMapQuery (Not Child)       f t = t
+shallowMapQuery (Not (Not q))     f t = shallowMapQuery q f t
 
 --- helpers ---
 
@@ -291,3 +305,29 @@ isNode                  = not . isTerminal
 --   matches the argument, otherwise simply returns the argument.
 applyIf p f x | p x       = f x
               | otherwise = x
+
+-- | Applies the function to the second argument if and only if the
+--   predicate matches the first argument, otherwise simply returns
+--   the second argument.
+applyIf' p f a b | p a       = f b
+                 | otherwise = b
+
+mapIf  p f = map          (applyIf  p f)
+mapIf' p f = mapWithIndex (applyIf' p f)
+
+-- | Like 'map', but accumulates the index while mapping and applies
+--   that to the function as well.
+mapWithIndex f xs = snd (mapAccumL (\ i x -> (i + 1, f i x)) 0 xs)
+
+-- | Like 'mapWithIndex', but for 'filter'.
+filterWithIndex p = reverse . snd . foldl (\ (i,l) x -> (i + 1, if p i x then x : l else l)) (0,[])
+
+-- | Returns 'True' if the argument matches all of the predicates in the list.
+andF fs = and . flip map fs . flip ($)
+
+-- | Returns 'True' if the argument matches any of the predicates in the list.
+orF  fs = or  . flip map fs . flip ($)
+
+-- | Returns the value of the node and any children. Treats an empty
+--   'Node' and a 'Terminal' the same way, so it's not lossless.
+nodeToList n = Terminal (value n) : children n
