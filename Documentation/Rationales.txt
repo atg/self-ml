@@ -1,0 +1,34 @@
+Rationales
+
+# Why use `#` for line comments? Why not `;` like sexprs?
+
+I wanted a quick and obvious way to tell self-ml from normal sexprs. `#` is probably the most common commenting character, so it was the obvious choice.
+
+# Why do block comments nest?
+
+In configuration files, you often have to comment stuff out (this is also why JSON is utterly useless for configuration files). Sometimes you have to comment stuff out that you've already commented out.
+
+# Why isn't the trivial list () supported?
+
+Because then it allows us to say that all nodes have heads, *except* the root node. Note that while `()` is invalid, `([])` *is* valid - the head is the empty string.
+
+# Why must all nodes have heads? Why can't I do ((1 2 3) (4 5 6))?
+
+I did consider it, but while there are a few legitimate reasons for wanting this, there's a whole skoda-load full of ways to shoot yourself in the foot too.
+
+Heads are great because they make the data *self-documenting*. We don't want:
+
+    (Bill 25 4 1972)
+
+We want
+
+    (person Bill 25 4 1972)
+
+Or even better:
+
+    (person Bill
+        (dob 25 4 1972))
+
+It then makes sense to make the leap that *all* nodes should have a head.
+
+So instead of doing `((1 2 3) (4 5 6))`, have `(matrix (1 2 3) (4 5 6))`. And pray to His Noodly Goodness that nobody ever asks you to represent a rank-3 tensor.
