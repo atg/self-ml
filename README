@@ -5,7 +5,7 @@
 # Unlike XML and JSON, it is designed explicitly to be written by humans and read by computers.
 # self-ml is inspired by Lisp's s-expressions.
 
-# For a detailed description, see http://dequechair.com/self-ml
+# For a detailed description, see http://chocolatapp.com/blog/self-ml
 
 
 ### SYNTAX ###

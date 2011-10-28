@@ -8,3 +8,5 @@ verbatim-strings
 [Strings with [nested brackets] in them]
 [Strings with all # kinds ` of [shit] (like) {this} {# Should #} still work]
 `As should [strings with back `` (ticks) {like} this`
+
+`` [] [Empty strings should parse]
