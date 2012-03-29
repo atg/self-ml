@@ -1,0 +1,12 @@
+# This is a line comment at the start of the document
+
+({# This is a block comment with {# a nested block comment#}#}abc)
+
+(# This is a line comment just after a bracket
+def)
+
+(foo{# bar #}bar)
+
+(ghi){#{##}#}(jkl)
+
+(mno)# This is a line comment at the end of the document

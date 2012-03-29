@@ -1,0 +1,10 @@
+[This document tests all kinds of strings]
+
+`back `` ticks`
+
+verbatim-strings
+
+[Strings with # signs in them]
+[Strings with [nested brackets] in them]
+[Strings with all # kinds ` of [shit] (like) {this} {# Should #} still work]
+`As should [strings with back `` (ticks) {like} this`
