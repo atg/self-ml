@@ -1,3 +1,0 @@
-[submodule "Implementations/Ruby"]
-	path = Implementations/Ruby
-	url = git://github.com/locks/self-ml.git
