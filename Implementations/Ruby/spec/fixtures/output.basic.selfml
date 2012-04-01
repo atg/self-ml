@@ -1,0 +1,6 @@
+(grandparent
+    (parent child1 child2)
+    (aunt))
+
+(grandparent
+    (parent child1 child2 child3))
