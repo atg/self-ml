@@ -5,13 +5,8 @@ var SFNode = (function() {
 		this.children = [];
 	};
 
-	SFNode.NODE_TYPE_LIST = 0;
-	SFNode.NODE_TYPE_STRING = 1;
-
 	SFNode.prototype.stringValue = null;
-
 	SFNode.prototype.parent = null;
-	SFNode.prototype.nodeType = SFNode.NODE_TYPE_LIST;
 
 	SFNode.createFromString = function(sourceString) {
 		var node = new SFNode();
@@ -20,9 +15,7 @@ var SFNode = (function() {
 	};
 
 	SFNode.prototype.addString = function(str) {
-		var node = new SFNode();
-		node.nodeType = SFNode.NODE_TYPE_STRING;
-		node.stringValue = str;
+		var node = new SFStringNode(str);
 		this.children.push(node);
 	};
 
@@ -35,91 +28,87 @@ var SFNode = (function() {
 		}
 
 		out = "";
-		switch (this.nodeType) {
-		case SFNode.NODE_TYPE_LIST:
-			var head = this.stringValue;
-			if (head) {
-				out += "(" + head;
-			}
+		var head = this.stringValue;
+		if (head) {
+			out += "(" + head;
+		}
 
-			var isScalarOnly = true;
+		var isScalarOnly = true;
+		if (!head) {
+			isScalarOnly = false;
+		} else {
+			this.children.forEach(function(child) {
+				if (child instanceof SFNode) {
+					isScalarOnly = false;
+				}
+			});
+		}
+
+		this.children.forEach(function(child, first) {
+			var newindent = 0;
+
+			first = first === 0;
 			if (!head) {
-				isScalarOnly = false;
+				if (!first) {
+					out += "\n\n";
+				}
+				newindent = 0;
 			} else {
-				this.children.forEach(function(child) {
-					if (child.nodeType === SFNode.NODE_TYPE_LIST) {
-						isScalarOnly = false;
-					}
-				});
-			}
-
-			this.children.forEach(function(child, first) {
-				var newindent = 0;
-
-				first = first === 0;
-				if (!head) {
-					if (!first) {
-						out += "\n\n";
-					}
+				if (isScalarOnly) {
+					out += " ";
 					newindent = 0;
 				} else {
-					if (isScalarOnly) {
-						out += " ";
-						newindent = 0;
-					} else {
-						out += "\n";
-						newindent = indentation + 1;
-						for (var i = 0; i < newindent; i++) {
-							out += "    ";
-						}
+					out += "\n";
+					newindent = indentation + 1;
+					for (var i = 0; i < newindent; i++) {
+						out += "    ";
 					}
 				}
-				out += child.toString(newindent);
-			});
-
-			if (head) {
-				out += ")";
 			}
-			break;
+			out += child.toString(newindent);
+		});
 
-		case SFNode.NODE_TYPE_STRING:
-			var str = this.stringValue;
-			if (str === null) {
-				break;
-			}
-
-			if (!str.length) {
-				out += "[]";
-				break;
-			}
-
-			// Find out if scannerStrval can be written as a verbatim string or bracketed string
-			var isVerbatimString = true;
-			var isBracketedString = true;
-
-			var bracketedStringNestingLevel = 0;
-			if (/[\s#`()\[\]{}]/.test(str)) {
-				isVerbatimString = false;
-			}
-
-			if ((str.match(/\[/g)||[]).length !== (str.match(/\]/g)||[]).length) {
-				isBracketedString = false;
-			}
-
-			if (isVerbatimString) {
-				out += str;
-			} else if (isBracketedString) {
-				out += "[" + str + "]";
-			} else {
-				out += "`" + str.replace(/`/g, "``") + "`";
-			}
-			break;
-		default:
-			throw new Error("Unknown node type");
+		if (head) {
+			out += ")";
 		}
 
 		return out;
+	};
 
+	function SFStringNode(stringValue) {
+		this.stringValue = stringValue;
+	}
+
+	SFStringNode.prototype.toString = function() {
+		var str = this.stringValue;
+		if (str === null) {
+			return "";
+		}
+
+		if (!str.length) {
+			return "[]";
+		}
+
+		// Find out if scannerStrval can be written as a verbatim string or bracketed string
+		var isVerbatimString = true;
+		var isBracketedString = true;
+
+		var bracketedStringNestingLevel = 0;
+		if (/[\s#`()\[\]{}]/.test(str)) {
+			isVerbatimString = false;
+		}
+
+		if ((str.match(/\[/g)||[]).length !== (str.match(/\]/g)||[]).length) {
+			isBracketedString = false;
+		}
+
+		if (isVerbatimString) {
+			return str;
+		} else if (isBracketedString) {
+			return "[" + str + "]";
+		} else {
+			return "`" + str.replace(/`/g, "``") + "`";
+		}
 	};
 
 
