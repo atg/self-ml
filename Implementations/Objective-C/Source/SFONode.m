@@ -180,11 +180,10 @@
 	
 	if (self)
 	{
-		if (SFNodeGetType(ref) == SFNodeTypeString)
-		{
+		if (SFNodeGetType(ref) == SFNodeTypeString) {
 			if (!SFNodeStringValue(ref))
-				return @"";
-			return [NSString stringWithUTF8String:SFNodeStringValue(ref)];
+				return (id)@"";
+			return (id)@(SFNodeStringValue(ref));
 		}
 		
 		node = ref;
