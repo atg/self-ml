@@ -90,6 +90,10 @@
 - (BOOL)hasSingletonNodeWithHead:(NSString *)shead;
 
 
+#pragma mark Other
+
+- (id)nodeForKey:(NSString *)key;
+
 #pragma mark Output
 
 - (NSString *)selfmlRepresentation;
