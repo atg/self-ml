@@ -41,12 +41,12 @@
 
 #pragma mark Properties and Getters
 
-@property (readwrite, copy) NSString *head;
-@property (readwrite, assign) SFONode *parent; //readwrite for internal reasons. External classes should not use this setter
+@property (copy) NSString *head;
+@property SFONode *parent; //readwrite for internal reasons. External classes should not use this setter
 
-@property (readwrite, assign) SFONode *rootNode; //readwrite for internal reasons. DExternal classes should not use this setter
+@property SFONode *rootNode; //readwrite for internal reasons. DExternal classes should not use this setter
 
-@property (readonly, assign) NSUInteger childCount;
+@property (readonly) NSUInteger childCount;
 @property (readonly) NSArray *children;
 @property SFNodeRef nodeRef;
 
