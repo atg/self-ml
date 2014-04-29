@@ -48,7 +48,7 @@
 
 @property (readonly, assign) NSUInteger childCount;
 @property (readonly) NSArray *children;
-@property (assign) SFNodeRef nodeRef;
+@property SFNodeRef nodeRef;
 
 //Returns nil if index is invalid
 - (id<SFONodeChild>)childAtIndex:(NSUInteger)index;
