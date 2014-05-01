@@ -8,7 +8,7 @@
 #endif
 
 #ifndef SFO_UTF8_TO_NSSTRING
-#define SFO_UTF8_TO_NSSTRING(utf) [[[NSString alloc] initWithUTF8String:utf] autorelease]
+#define SFO_UTF8_TO_NSSTRING(utf) [[NSString alloc] initWithUTF8String:utf]
 #endif
 
 @interface SFONode ()

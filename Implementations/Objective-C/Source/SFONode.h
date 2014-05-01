@@ -33,6 +33,7 @@
 - (id)initWithNodeRef:(SFNodeRef)ref;
 - (id)initWithNodeRef:(SFNodeRef)ref isLazy:(BOOL)isLazy; //Designated Initializer
 
+- (id)initWithContentsOfFile:(NSString *)path;
 
 #pragma mark Equality, etc
 
@@ -93,6 +94,9 @@
 #pragma mark Other
 
 - (id)nodeForKey:(NSString *)key;
+- (id)firstIfString;
+- (id)first;
+- (NSArray *)rest;
 
 #pragma mark Output
 
