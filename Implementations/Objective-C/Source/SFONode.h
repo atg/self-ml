@@ -26,6 +26,8 @@
 + (id)nodeFromData:(NSData *)data;
 + (id)nodeFromNodeRef:(SFNodeRef)ref;
 
+- (BOOL)loadFromFilePath;
+
 - (id)init;
 - (id)initWithString:(NSString *)string;
 - (id)initWithList:(NSArray *)strings; // [head, arg1, arg2, arg3, ...]
