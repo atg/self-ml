@@ -245,7 +245,7 @@
 	if (filePath) [self loadFromFilePath];
 	
     if ([otherNode respondsToSelector:@selector(selfmlRepresentation)])
-        return [[self selfmlRepresentation] isEqual:[otherNode selfmlRepresentation]];
+        return [[self selfmlRepresentation] isEqual:[(SFONode*)otherNode selfmlRepresentation]];
     return NO;
 }
 
@@ -413,7 +413,7 @@
 }
 
 //Extract all strings
-- (NSArray *)extractStrings
+- (NSMutableArray *)extractStrings
 {
 	if (isSuspended) [self thaw];
 	
@@ -483,7 +483,7 @@
 {
 	if (isSuspended) [self thaw];
 	
-	__strong const char *keyUTF8 = [key UTF8String];
+	const char *keyUTF8 = [key UTF8String];
 	
 	for(SFONode *child in children) {
 		if ([child sfNodeType] == SFNodeTypeList && strcmp(SFNodeHead([child nodeRef]), keyUTF8) == 0) {

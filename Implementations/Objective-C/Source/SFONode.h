@@ -20,11 +20,12 @@
 
 #pragma mark Creation
 
-+ (id)node;
-+ (id)nodeFromString:(NSString *)string;
-+ (id)nodeFromList:(NSArray *)strings;
-+ (id)nodeFromData:(NSData *)data;
-+ (id)nodeFromNodeRef:(SFNodeRef)ref;
++ (instancetype)node;
++ (instancetype)nodeFromString:(NSString *)string;
++ (instancetype)nodeFromList:(NSArray *)strings;
++ (instancetype)nodeFromData:(NSData *)data;
++ (instancetype)nodeFromNodeRef:(SFNodeRef)ref;
++ (instancetype)nodeWithContentsOfFile:(NSString *)path;
 
 - (BOOL)loadFromFilePath;
 
@@ -72,13 +73,15 @@
 - (void)removeChildAtIndex:(NSUInteger)index;
 */
 
+- (void)replaceChildNodeAtIndex:(NSInteger)index with:(id<SFONodeChild>)newChild;
+
 #pragma mark Querying
 
 //Extract an NSArray of all child nodes with name nodeName
 - (NSArray *)extract:(NSString *)nodeName;
 
 //Extract all strings
-- (NSArray *)extractStrings;
+- (NSMutableArray *)extractStrings;
 
 //Extract singleton nodes (like) (this)
 - (NSArray *)extractSingletonNodes;
