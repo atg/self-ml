@@ -47,31 +47,31 @@
 
 + (id)node
 {
-	return [[[self alloc] init] autorelease];
+	return [[self alloc] init];
 }
 + (id)nodeFromString:(NSString *)string
 {
-	return [[[self alloc] initWithString:string] autorelease];
+	return [[self alloc] initWithString:string];
 }
 + (id)nodeFromList:(NSArray *)strings
 {
-	return [[[self alloc] initWithList:strings] autorelease];
+	return [[self alloc] initWithList:strings];
 }
 + (id)nodeFromData:(NSData *)data
 {
-	return [[[self alloc] initWithData:data] autorelease];
+	return [[self alloc] initWithData:data];
 }
 + (id)nodeWithContentsOfFile:(NSString *)path
 {
-	return [[[self alloc] initWithContentsOfFile:path] autorelease];
+	return [[self alloc] initWithContentsOfFile:path];
 }
 + (id)nodeFromNodeRef:(SFNodeRef)ref
 {
-	return [[[self alloc] initWithNodeRef:ref isLazy:NO] autorelease];
+	return [[self alloc] initWithNodeRef:ref isLazy:NO];
 }
 + (id)lazyNodeFromNodeRef:(SFNodeRef)ref
 {
-	return [[[self alloc] initWithNodeRef:ref isLazy:YES] autorelease];
+	return [[self alloc] initWithNodeRef:ref isLazy:YES];
 }
 
 - (id)init
@@ -110,7 +110,7 @@
 
 - (id)initWithData:(NSData *)data
 {
-	SFNodeRef ref = SFNodeCreateFromString([[[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease] UTF8String]);
+	SFNodeRef ref = SFNodeCreateFromString([[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] UTF8String]);
 	return [self initWithNodeRef:ref];
 }
 - (id)initWithContentsOfFile:(NSString *)path
@@ -234,7 +234,7 @@
 {
 	if (filePath) [self loadFromFilePath];
 	
-	return [[[[self class] allocWithZone:zone] initWithNodeRef:SFNodeCopy(node)] autorelease];	
+	return [[[self class] allocWithZone:zone] initWithNodeRef:SFNodeCopy(node)];	
 }
 
 
@@ -267,7 +267,7 @@
 	if (!head)
 		return @"";
 	
-	return [[[NSString alloc] initWithUTF8String:head] autorelease] ?: @"";
+	return [[NSString alloc] initWithUTF8String:head] ?: @"";
 }
 - (void)setHead:(NSString *)headString
 {
@@ -350,7 +350,7 @@
 	
 	if ([item sfNodeType] == SFNodeTypeString)
 	{
-		item = [[item copy] autorelease];
+		item = [item copy];
 		
 		//Get the UTF8 value of item, then create a new child node and append it to node
 		size_t len = strlen([(NSString *)item UTF8String]);
@@ -403,7 +403,7 @@
 {
 	if (isSuspended) [self thaw];
 	
-	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
+	NSMutableArray *result = [[NSMutableArray alloc] init];
 	for(SFONode *child in children) {
 		if ([child sfNodeType] == SFNodeTypeList && [[child head] isEqual:nodeName]) {
 			[result addObject:child];
@@ -417,7 +417,7 @@
 {
 	if (isSuspended) [self thaw];
 	
-	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
+	NSMutableArray *result = [[NSMutableArray alloc] init];
 	for(SFONode *child in children) {
 		if([child sfNodeType] == SFNodeTypeString) {
 			[result addObject:child];
@@ -432,7 +432,7 @@
 {
 	if (isSuspended) [self thaw];
 	
-	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
+	NSMutableArray *result = [[NSMutableArray alloc] init];
 	for(SFONode *child in children) {
 		if([child sfNodeType] == SFNodeTypeList && [[child head] length] > 0 && [child childCount] == 0) {
 			[result addObject:child];
@@ -446,7 +446,7 @@
 {
 	if (isSuspended) [self thaw];
 	
-	NSMutableArray *result = [[[NSMutableArray alloc] init] autorelease];
+	NSMutableArray *result = [[NSMutableArray alloc] init];
 	for(SFONode *child in children) {
 		if([child sfNodeType] == SFNodeTypeList) {
 			[result addObject:child];
@@ -560,7 +560,7 @@
 {
 	if (filePath) [self loadFromFilePath];
 	
-	NSMutableString *stringRep = [[[NSMutableString alloc] init] autorelease];
+	NSMutableString *stringRep = [[NSMutableString alloc] init];
 	SFONodeWriteRepresentation([self nodeRef], stringRep);
 	return stringRep;
 	
@@ -588,10 +588,9 @@
 	[super dealloc];
 }
 */
-- (void)finalize
+- (void)dealloc
 {
 	[self cleanUp];
-	[super finalize];
 }
 - (void)cleanUp
 {
